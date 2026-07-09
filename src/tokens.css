@@ -1,0 +1,71 @@
+:root {
+  color-scheme: light dark;
+
+  /* ─── Surfaces ─── */
+  --yy-bg-body: light-dark(#f4f6f8, #0f0f1a);
+  --yy-bg-surface: light-dark(#ffffff, #1a1a2e);
+  --yy-bg-primary: light-dark(#f9fafb, #16213e);
+  --yy-bg-dark: light-dark(#1a1a2e, #0a0a14);
+
+  /* ─── Text ─── */
+  --yy-text: light-dark(#1a1a2e, #e8e8f0);
+  --yy-text-muted: light-dark(#6b7280, #9ca3af);
+  --yy-text-white: #ffffff;
+
+  /* ─── Borders ─── */
+  --yy-border: light-dark(#e2e5ea, #2a2a4a);
+  --yy-border-subtle: light-dark(#f0f1f3, #1f1f3a);
+
+  /* ─── Accent (athletic blue) ─── */
+  --yy-accent: light-dark(#2563eb, #3b82f6);
+  --yy-accent-hover: light-dark(#1d4ed8, #60a5fa);
+
+  /* ─── Status ─── */
+  --yy-danger: light-dark(#dc2626, #ef4444);
+  --yy-danger-hover: light-dark(#b91c1c, #f87171);
+  --yy-success: light-dark(#16a34a, #22c55e);
+  --yy-success-hover: light-dark(#15803d, #4ade80);
+  --yy-warning: light-dark(#d97706, #f59e0b);
+  --yy-warning-hover: light-dark(#b45309, #fbbf24);
+
+  /* ─── Interactive ─── */
+  --yy-hover-overlay: light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.06));
+  --yy-shadow: light-dark(
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.3)
+  );
+  --yy-shadow-lg: light-dark(
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.4)
+  );
+  --yy-backdrop: rgba(0, 0, 0, 0.5);
+
+  /* ─── Test-specific ─── */
+  --yy-level-active: light-dark(#2563eb, #3b82f6);
+  --yy-level-complete: light-dark(#16a34a, #22c55e);
+  --yy-level-failed: light-dark(#dc2626, #ef4444);
+  --yy-shuttle-track: light-dark(#e5e7eb, #374151);
+  --yy-shuttle-progress: light-dark(#2563eb, #3b82f6);
+
+  /* Ring colors — outer green, inner amber (3:1+ on both light/dark tracks) */
+  --yy-ring-outer: light-dark(#16a34a, #22c55e);
+  --yy-ring-inner: light-dark(#d97706, #f59e0b);
+
+  /* ─── Spacing scale ─── */
+  --yy-space-xs: 4px;
+  --yy-space-sm: 8px;
+  --yy-space-md: 16px;
+  --yy-space-lg: 24px;
+  --yy-space-xl: 32px;
+  --yy-space-2xl: 48px;
+
+  /* ─── Radius ─── */
+  --yy-radius-sm: 4px;
+  --yy-radius-md: 8px;
+  --yy-radius-lg: 12px;
+  --yy-radius-full: 9999px;
+
+  /* ─── Transitions ─── */
+  --yy-transition-fast: 150ms ease;
+  --yy-transition-normal: 250ms ease;
+}
