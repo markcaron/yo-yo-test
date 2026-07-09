@@ -1,4 +1,4 @@
-import { LitElement, html, svg, css } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 /**
@@ -43,7 +43,11 @@ export class YyDial extends LitElement {
       fill: none;
       stroke: var(--yy-ring-inner);
       stroke-linecap: round;
-      transition: stroke-dashoffset 100ms linear;
+      transition: stroke-dashoffset 100ms linear, stroke 200ms ease;
+    }
+
+    :host([recovery]) .inner-ring {
+      stroke: var(--yy-accent);
     }
   `;
 
@@ -52,6 +56,9 @@ export class YyDial extends LitElement {
 
   /** 0–1 progress for the inner ring (20m segment) */
   @property({ type: Number }) innerProgress = 0;
+
+  /** When true, inner ring turns blue (recovery phase) */
+  @property({ type: Boolean, reflect: true }) recovery = false;
 
   render() {
     const outerRadius = 120;

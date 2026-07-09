@@ -19,7 +19,7 @@ export interface LevelData {
   speed: number;
   /** Time per shuttle in seconds */
   shuttleTime: number;
-  /** Distance per shuttle in meters (always 20m for Yo-Yo IR) */
+  /** Distance per shuttle in meters (40m = 20m out + 20m back) */
   shuttleDistance: number;
   /** Cumulative distance at end of this level */
   cumulativeDistance: number;

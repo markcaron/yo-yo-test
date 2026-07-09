@@ -67,29 +67,6 @@ export function cancelAllAudio(): void {
   scheduledNodes = [];
 }
 
-/** Single short beep — marks 20m turn point */
-export function beepSingle(): void {
-  const audioCtx = getContext();
-  playTone(1000, audioCtx.currentTime, 0.15);
-}
-
-/** Double beep — marks end of shuttle (40m complete) */
-export function beepDouble(): void {
-  const audioCtx = getContext();
-  const now = audioCtx.currentTime;
-  playTone(1000, now, 0.12);
-  playTone(1000, now + 0.18, 0.12);
-}
-
-/** Triple beep — marks end of stage / level complete */
-export function beepTriple(): void {
-  const audioCtx = getContext();
-  const now = audioCtx.currentTime;
-  playTone(1200, now, 0.1);
-  playTone(1200, now + 0.15, 0.1);
-  playTone(1200, now + 0.3, 0.1);
-}
-
 /**
  * Schedule a beep at an absolute AudioContext time.
  * Use this for precision timing against the device clock.

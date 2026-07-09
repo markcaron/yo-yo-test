@@ -13,8 +13,8 @@
   --yy-text-white: #ffffff;
 
   /* ─── Borders ─── */
-  --yy-border: light-dark(#e2e5ea, #2a2a4a);
-  --yy-border-subtle: light-dark(#f0f1f3, #1f1f3a);
+  --yy-border: light-dark(#c9cdd4, #3a3a5a);
+  --yy-border-subtle: light-dark(#e2e5ea, #1f1f3a);
 
   /* ─── Accent (athletic blue) ─── */
   --yy-accent: light-dark(#2563eb, #3b82f6);

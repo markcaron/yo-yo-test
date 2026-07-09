@@ -65,18 +65,25 @@ export class TimerEngine {
     return this.#status;
   }
 
-  start(): void {
+  start(options?: { skipCountdown?: boolean }): void {
     if (this.#status === 'running' || this.#status === 'countdown') return;
     unlockAudio();
-    this.#status = 'countdown';
     this.#levelIndex = 0;
     this.#shuttleIndex = 0;
     this.#phase = 'out';
     this.#distance = 0;
-    this.#countdownStartMs = performance.now();
 
-    scheduleCountdownTicks(getAudioTime());
-    this.#runCountdown();
+    if (options?.skipCountdown) {
+      this.#status = 'running';
+      this.#testStartMs = performance.now();
+      this.#beginSegment();
+      this.#scheduleLoop();
+    } else {
+      this.#status = 'countdown';
+      this.#countdownStartMs = performance.now();
+      scheduleCountdownTicks(getAudioTime());
+      this.#runCountdown();
+    }
   }
 
   stop(): void {
@@ -127,7 +134,10 @@ export class TimerEngine {
     this.#rafId = requestAnimationFrame(tick);
   }
 
-  #beginSegment(): void {
+  /** Audio time reference for the current shuttle's first segment */
+  #shuttleAudioStart = 0;
+
+  #beginSegment(stageChanged = false): void {
     const level = this.#levels[this.#levelIndex];
     if (!level) {
       this.stop();
@@ -135,27 +145,22 @@ export class TimerEngine {
     }
 
     this.#segmentStartMs = performance.now();
+    const halfShuttleSec = level.shuttleTime / 2;
 
     if (this.#phase === 'recovery') {
       this.#segmentDurationMs = RECOVERY_SECONDS * 1000;
     } else {
-      const halfShuttleTime = (level.shuttleTime / 2) * 1000;
-      this.#segmentDurationMs = halfShuttleTime;
+      this.#segmentDurationMs = halfShuttleSec * 1000;
     }
-
-    this.#scheduleBeepForSegment();
-  }
-
-  #scheduleBeepForSegment(): void {
-    const audioNow = getAudioTime();
 
     if (this.#phase === 'out') {
-      scheduleBeep('single', audioNow);
-    } else if (this.#phase === 'back') {
-      scheduleBeep('single', audioNow);
-    } else if (this.#phase === 'recovery') {
-      scheduleBeep('double', audioNow);
+      const audioNow = getAudioTime();
+      this.#shuttleAudioStart = audioNow;
+      scheduleBeep(stageChanged ? 'triple' : 'single', audioNow);
+      scheduleBeep('single', audioNow + halfShuttleSec);
+      scheduleBeep('double', audioNow + level.shuttleTime);
     }
+    // 'back' and 'recovery' beeps are already pre-scheduled from 'out'
   }
 
   #advance(): void {
@@ -171,16 +176,18 @@ export class TimerEngine {
       this.#beginSegment();
     } else if (this.#phase === 'recovery') {
       this.#shuttleIndex++;
+      let stageChanged = false;
       if (this.#shuttleIndex >= level.shuttles) {
         this.#shuttleIndex = 0;
         this.#levelIndex++;
+        stageChanged = true;
         if (this.#levelIndex >= this.#levels.length) {
           this.stop();
           return;
         }
       }
       this.#phase = 'out';
-      this.#beginSegment();
+      this.#beginSegment(stageChanged);
     }
   }
 
