@@ -1,6 +1,6 @@
 {
   "name": "yo-yo-test",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Yo-Yo Intermittent Recovery Test app for athletic performance evaluations",
   "scripts": {
