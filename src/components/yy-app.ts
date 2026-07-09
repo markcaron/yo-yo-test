@@ -3,13 +3,14 @@ import { customElement, state } from 'lit/decorators.js';
 import { buttonStyles } from '../styles/buttons.js';
 import { TimerEngine, type TimerState, type EngineStatus } from '../lib/timer-engine.js';
 import { YYIR1_LEVELS, estimateVO2max } from '../lib/yo-yo-protocol.js';
-import { iconPlay, iconStop, iconReset, iconMiss, iconSettings, iconClipboard, iconAbout, iconInfo } from '../icons.js';
+import { iconPlay, iconStop, iconReset, iconMiss, iconDashboard, iconQuestion, iconClipboard, iconSettings } from '../icons.js';
 import { getSettings } from './yy-settings.js';
 import './yy-dial.js';
-import './yy-about.js';
-import './yy-instructions.js';
+import './yy-help.js';
 import './yy-norms.js';
 import './yy-settings.js';
+
+type AppView = 'dashboard' | 'help' | 'norms' | 'settings';
 
 @customElement('yy-app')
 export class YyApp extends LitElement {
@@ -315,6 +316,10 @@ export class YyApp extends LitElement {
         background: var(--yy-hover-overlay);
       }
 
+      .nav-btn[aria-current="page"] svg {
+        fill: var(--yy-accent);
+      }
+
       .nav-btn:focus-visible {
         outline: 2px solid var(--yy-accent);
         outline-offset: 3px;
@@ -324,6 +329,12 @@ export class YyApp extends LitElement {
         width: 28px;
         height: 28px;
         fill: var(--yy-text-muted);
+      }
+
+      /* ─── View content area ─── */
+      .view-content {
+        flex: 1;
+        overflow-y: auto;
       }
 
       /* ─── Live region (sr-only) ─── */
@@ -341,6 +352,7 @@ export class YyApp extends LitElement {
     `,
   ];
 
+  @state() private _view: AppView = 'dashboard';
   @state() private _engineStatus: EngineStatus = 'idle';
   @state() private _timerState: TimerState | null = null;
   @state() private _announcement = '';
@@ -374,81 +386,84 @@ export class YyApp extends LitElement {
     const isCountdown = this._engineStatus === 'countdown';
 
     return html`
-      <header>
-        <div class="brand">
-          <svg class="brand-icon" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="m474.98 1137.5c-227.48 0-412.5-185.02-412.5-412.5 0-227.53 185.02-412.5 412.5-412.5s412.5 185.02 412.5 412.5-185.02 412.5-412.5 412.5zm0-750c-186 0-337.5 151.5-337.5 337.5s151.5 337.5 337.5 337.5 337.5-151.5 337.5-337.5-151.5-337.5-337.5-337.5z"/>
-            <path d="m474.98 1012.5c-158.48 0-287.48-129-287.48-287.48s129-287.48 287.48-287.48 287.48 129 287.48 287.48-129 287.48-287.48 287.48zm0-500.02c-117 0-212.48 95.484-212.48 212.48s95.484 212.48 212.48 212.48 212.48-95.484 212.48-212.48-95.484-212.48-212.48-212.48z"/>
-            <path d="m552 881.48c-4.5 0-9.5156-0.98438-13.5-2.4844l-63.516-24.984-63.516 24.984c-12 4.5-25.5 3-35.484-4.5-10.5-7.5-15.984-20.016-15.516-32.484l3.9844-68.016-43.5-52.5c-8.0156-9.9844-10.5-23.016-6.5156-35.484 3.9844-12 14.016-21.516 26.484-24.516l66-17.016 36.516-57.516c14.016-21.516 49.5-21.516 63.516 0l36.516 57.516 66 17.016c12.516 3 22.5 12.516 26.484 24.516s1.5 25.5-6.5156 35.484l-43.5 52.5 3.9844 68.016c0.98438 12.984-5.0156 24.984-15.516 32.484-6.5156 4.5-14.016 6.9844-21.984 6.9844zm-77.016-105.47c4.5 0 9.5156 0.98438 13.5 2.4844l22.5 9-1.5-24c-0.51562-9.5156 2.4844-18.984 8.4844-26.016l15.516-18.516-23.484-6c-9-2.4844-17.016-8.0156-22.5-15.984l-12.984-20.484-12.984 20.484c-5.0156 8.0156-12.984 14.016-22.5 15.984l-23.484 6 15.516 18.516c6 7.5 9 16.5 8.4844 26.016l-1.5 24 22.5-9c4.5-1.5 9-2.4844 13.5-2.4844z"/>
-            <path d="m1050 937.5c-20.484 0-37.5-17.016-37.5-37.5v-699.98c0-34.5-27.984-62.484-62.484-62.484s-62.484 27.984-62.484 62.484v525c0 20.484-17.016 37.5-37.5 37.5s-37.5-17.016-37.5-37.5l-0.046875-525c0-75.984 61.5-137.48 137.48-137.48s137.48 61.5 137.48 137.48v699.98c0 20.484-17.016 37.5-37.5 37.5z"/>
-            <path d="m1050 1137.5c-48 0-87.516-39.516-87.516-87.516v-99.984c0-48 39.516-87.516 87.516-87.516s87.516 39.516 87.516 87.516v99.984c0 48-39.516 87.516-87.516 87.516zm0-200.02c-6.9844 0-12.516 5.4844-12.516 12.516v99.984c0 14.016 24.984 14.016 24.984 0v-99.984c0-6.9844-5.4844-12.516-12.516-12.516z"/>
-          </svg>
-          <div class="brand-text">
-            <h1>Yo-Yo Test</h1>
-            <p class="subtitle">Intermittent Recovery Level 1</p>
-          </div>
-        </div>
-      </header>
-
-      <main>
-        <div class="stats" role="group" aria-label="Test statistics">
-          <span>${this.#formatTime(elapsedMs)}</span>
-          <span>${distance} m</span>
-        </div>
-        ${this._engineStatus === 'stopped' ? html`
-          ${this.#renderResults(levelNum, shuttleNum, distance, elapsedMs)}
-        ` : html`
-          <div class="dial-container" role="img"
-            aria-label="${isCountdown
-              ? `Countdown: ${Math.ceil(countdownRemaining)} seconds`
-              : `Test progress: Stage ${levelNum}, Shuttle ${shuttleNum}, Speed ${speed} km/h`}">
-            <yy-dial
-              .outerProgress=${outerProgress}
-              .innerProgress=${innerProgress}
-              ?recovery=${isRecovery}
-            ></yy-dial>
-            <div class="dial-center">
-              ${isCountdown ? html`
-                <span class="countdown-display">${Math.ceil(countdownRemaining)}</span>
-              ` : isRecovery ? html`
-                <span class="countdown-display">${Math.ceil(recoveryRemaining)}</span>
-                <span class="recovery-next">${this.#nextStageLabel(levelNum, shuttleNum)}</span>
-              ` : html`
-                <span class="level-display">${levelNum}:${shuttleNum}</span>
-                <span class="speed-display">${speed} km/h</span>
-              `}
+      ${this._view === 'dashboard' ? html`
+        <header>
+          <div class="brand">
+            <svg class="brand-icon" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="m474.98 1137.5c-227.48 0-412.5-185.02-412.5-412.5 0-227.53 185.02-412.5 412.5-412.5s412.5 185.02 412.5 412.5-185.02 412.5-412.5 412.5zm0-750c-186 0-337.5 151.5-337.5 337.5s151.5 337.5 337.5 337.5 337.5-151.5 337.5-337.5-151.5-337.5-337.5-337.5z"/>
+              <path d="m474.98 1012.5c-158.48 0-287.48-129-287.48-287.48s129-287.48 287.48-287.48 287.48 129 287.48 287.48-129 287.48-287.48 287.48zm0-500.02c-117 0-212.48 95.484-212.48 212.48s95.484 212.48 212.48 212.48 212.48-95.484 212.48-212.48-95.484-212.48-212.48-212.48z"/>
+              <path d="m552 881.48c-4.5 0-9.5156-0.98438-13.5-2.4844l-63.516-24.984-63.516 24.984c-12 4.5-25.5 3-35.484-4.5-10.5-7.5-15.984-20.016-15.516-32.484l3.9844-68.016-43.5-52.5c-8.0156-9.9844-10.5-23.016-6.5156-35.484 3.9844-12 14.016-21.516 26.484-24.516l66-17.016 36.516-57.516c14.016-21.516 49.5-21.516 63.516 0l36.516 57.516 66 17.016c12.516 3 22.5 12.516 26.484 24.516s1.5 25.5-6.5156 35.484l-43.5 52.5 3.9844 68.016c0.98438 12.984-5.0156 24.984-15.516 32.484-6.5156 4.5-14.016 6.9844-21.984 6.9844zm-77.016-105.47c4.5 0 9.5156 0.98438 13.5 2.4844l22.5 9-1.5-24c-0.51562-9.5156 2.4844-18.984 8.4844-26.016l15.516-18.516-23.484-6c-9-2.4844-17.016-8.0156-22.5-15.984l-12.984-20.484-12.984 20.484c-5.0156 8.0156-12.984 14.016-22.5 15.984l-23.484 6 15.516 18.516c6 7.5 9 16.5 8.4844 26.016l-1.5 24 22.5-9c4.5-1.5 9-2.4844 13.5-2.4844z"/>
+              <path d="m1050 937.5c-20.484 0-37.5-17.016-37.5-37.5v-699.98c0-34.5-27.984-62.484-62.484-62.484s-62.484 27.984-62.484 62.484v525c0 20.484-17.016 37.5-37.5 37.5s-37.5-17.016-37.5-37.5l-0.046875-525c0-75.984 61.5-137.48 137.48-137.48s137.48 61.5 137.48 137.48v699.98c0 20.484-17.016 37.5-37.5 37.5z"/>
+              <path d="m1050 1137.5c-48 0-87.516-39.516-87.516-87.516v-99.984c0-48 39.516-87.516 87.516-87.516s87.516 39.516 87.516 87.516v99.984c0 48-39.516 87.516-87.516 87.516zm0-200.02c-6.9844 0-12.516 5.4844-12.516 12.516v99.984c0 14.016 24.984 14.016 24.984 0v-99.984c0-6.9844-5.4844-12.516-12.516-12.516z"/>
+            </svg>
+            <div class="brand-text">
+              <h1>Yo-Yo Test</h1>
+              <p class="subtitle">Intermittent Recovery Level 1</p>
             </div>
           </div>
-        `}
+        </header>
 
-        <div class="controls">
-          ${this.#renderControls()}
+        <main>
+          <div class="stats" role="group" aria-label="Test statistics">
+            <span>${this.#formatTime(elapsedMs)}</span>
+            <span>${distance} m</span>
+          </div>
+          ${this._engineStatus === 'stopped' ? html`
+            ${this.#renderResults(levelNum, shuttleNum, distance, elapsedMs)}
+          ` : html`
+            <div class="dial-container" role="img"
+              aria-label="${isCountdown
+                ? `Countdown: ${Math.ceil(countdownRemaining)} seconds`
+                : `Test progress: Stage ${levelNum}, Shuttle ${shuttleNum}, Speed ${speed} km/h`}">
+              <yy-dial
+                .outerProgress=${outerProgress}
+                .innerProgress=${innerProgress}
+                ?recovery=${isRecovery}
+              ></yy-dial>
+              <div class="dial-center">
+                ${isCountdown ? html`
+                  <span class="countdown-display">${Math.ceil(countdownRemaining)}</span>
+                ` : isRecovery ? html`
+                  <span class="countdown-display">${Math.ceil(recoveryRemaining)}</span>
+                  <span class="recovery-next">${this.#nextStageLabel(levelNum, shuttleNum)}</span>
+                ` : html`
+                  <span class="level-display">${levelNum}:${shuttleNum}</span>
+                  <span class="speed-display">${speed} km/h</span>
+                `}
+              </div>
+            </div>
+          `}
+
+          <div class="controls">
+            ${this.#renderControls()}
+          </div>
+
+          ${this._engineStatus !== 'stopped'
+            ? this.#renderNextLevel(levelNum)
+            : nothing}
+        </main>
+      ` : html`
+        <div class="view-content">
+          ${this._view === 'help' ? html`<yy-help></yy-help>` : nothing}
+          ${this._view === 'norms' ? html`<yy-norms></yy-norms>` : nothing}
+          ${this._view === 'settings' ? html`<yy-settings @settings-changed=${this.#onSettingsChanged}></yy-settings>` : nothing}
         </div>
-
-        ${this._engineStatus !== 'stopped'
-          ? this.#renderNextLevel(levelNum)
-          : nothing}
-      </main>
+      `}
 
       <nav aria-label="App navigation">
-        <button class="nav-btn" aria-label="About" @click=${this.#openAbout}>
-          <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconInfo}</svg>
+        <button class="nav-btn" aria-label="Dashboard" aria-current="${this._view === 'dashboard' ? 'page' : nothing}" @click=${() => this.#setView('dashboard')}>
+          <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconDashboard}</svg>
         </button>
-        <button class="nav-btn" aria-label="Instructions" @click=${this.#openInstructions}>
-          <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconAbout}</svg>
+        <button class="nav-btn" aria-label="Help" aria-current="${this._view === 'help' ? 'page' : nothing}" @click=${() => this.#setView('help')}>
+          <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconQuestion}</svg>
         </button>
-        <button class="nav-btn" aria-label="Stage table" @click=${this.#openNorms}>
+        <button class="nav-btn" aria-label="Stage table" aria-current="${this._view === 'norms' ? 'page' : nothing}" @click=${() => this.#setView('norms')}>
           <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconClipboard}</svg>
         </button>
-        <button class="nav-btn" aria-label="Settings" @click=${this.#openSettings}>
+        <button class="nav-btn" aria-label="Settings" aria-current="${this._view === 'settings' ? 'page' : nothing}" @click=${() => this.#setView('settings')}>
           <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconSettings}</svg>
         </button>
       </nav>
-
-      <yy-about></yy-about>
-      <yy-instructions></yy-instructions>
-      <yy-norms></yy-norms>
-      <yy-settings @settings-changed=${this.#onSettingsChanged}></yy-settings>
 
       <dialog id="stop-dialog" @close=${this.#onDialogClose}>
         <h2>Stop test?</h2>
@@ -615,20 +630,8 @@ export class YyApp extends LitElement {
     this.#engine.reset();
   }
 
-  #openAbout() {
-    this.renderRoot.querySelector<import('./yy-about.js').YyAbout>('yy-about')?.open();
-  }
-
-  #openInstructions() {
-    this.renderRoot.querySelector<import('./yy-instructions.js').YyInstructions>('yy-instructions')?.open();
-  }
-
-  #openNorms() {
-    this.renderRoot.querySelector<import('./yy-norms.js').YyNorms>('yy-norms')?.open();
-  }
-
-  #openSettings() {
-    this.renderRoot.querySelector<import('./yy-settings.js').YySettings>('yy-settings')?.open();
+  #setView(view: AppView) {
+    this._view = view;
   }
 
   #onSettingsChanged() {
