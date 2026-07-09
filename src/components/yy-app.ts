@@ -66,7 +66,9 @@ export class YyApp extends LitElement {
         display: flex;
         justify-content: center;
         gap: var(--yy-space-lg);
-        padding: var(--yy-space-sm) var(--yy-space-md);
+        padding: var(--yy-space-sm) var(--yy-space-lg);
+        background: var(--yy-bg-surface);
+        border-radius: var(--yy-radius-lg);
         font-size: 0.95rem;
         color: var(--yy-text-muted);
         font-variant-numeric: tabular-nums;
@@ -388,12 +390,11 @@ export class YyApp extends LitElement {
         </div>
       </header>
 
-      <div class="stats" role="group" aria-label="Test statistics">
-        <span>${this.#formatTime(elapsedMs)}</span>
-        <span>${distance} m</span>
-      </div>
-
       <main>
+        <div class="stats" role="group" aria-label="Test statistics">
+          <span>${this.#formatTime(elapsedMs)}</span>
+          <span>${distance} m</span>
+        </div>
         ${this._engineStatus === 'stopped' ? html`
           ${this.#renderResults(levelNum, shuttleNum, distance, elapsedMs)}
         ` : html`
