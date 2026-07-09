@@ -165,26 +165,41 @@ What counts:
 
 ---
 
-## Git Worktrees
+## Git Workflow — MANDATORY
 
-All feature branches use git worktrees. Never `git checkout` to switch branches.
+**NEVER push directly to `main`. ALL changes go through PRs.**
 
-```bash
-git worktree add ../yo-yo-test-feat-<name> -b feat/<name> origin/main
-cd ../yo-yo-test-feat-<name>
+### Every change follows this flow:
 
-# After PR merges
-git worktree remove ../yo-yo-test-feat-<name>
-git branch -d feat/<name>
-```
+1. Create a worktree from `main`:
+   ```bash
+   git worktree add ../yo-yo-test-feat-<name> -b feat/<name> origin/main
+   cd ../yo-yo-test-feat-<name>
+   ```
 
-Main worktree at `/Users/mcaron/Sites/yo-yo-test` stays on `main`.
+2. Make changes, commit in the worktree.
+
+3. Push branch and open a PR:
+   ```bash
+   git push -u origin HEAD
+   gh pr create --title "..." --body "..."
+   ```
+
+4. Return the PR URL to the user. Wait for merge.
+
+5. After merge, clean up:
+   ```bash
+   git worktree remove ../yo-yo-test-feat-<name>
+   git branch -d feat/<name>
+   ```
+
+Main worktree at `/Users/mcaron/Sites/yo-yo-test` stays on `main`. Never commit there.
 
 ---
 
 ## Branching & Versioning
 
-- `main` — production (deployed via Netlify)
+- `main` — production (deployed via Netlify, protected)
 - `feat/<name>` — features off `main`
 - `fix/<name>` — hotfixes targeting `main`
 
