@@ -1,13 +1,16 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
+const OUTER_R = 120;
+const INNER_R = 96;
+const OUTER_C = 2 * Math.PI * OUTER_R;
+const INNER_C = 2 * Math.PI * INNER_R;
+
 /**
  * Concentric progress ring dial.
  *
- * - Outer ring: full shuttle (40m) progress
- * - Inner ring: current 20m segment progress
- *
- * Rings "shrink" (deplete) as time runs out — full = just started, empty = time's up.
+ * Uses direct DOM manipulation for stroke-dashoffset to avoid
+ * Lit re-renders on every rAF frame (eliminates iOS jitter).
  */
 @customElement('yy-dial')
 export class YyDial extends LitElement {
@@ -18,13 +21,13 @@ export class YyDial extends LitElement {
       max-width: 300px;
       aspect-ratio: 1;
       margin: 0 auto;
+      contain: layout style paint;
     }
 
     svg {
       width: 100%;
       height: 100%;
       transform: rotate(-90deg) translateZ(0);
-      will-change: contents;
     }
 
     .track {
@@ -37,14 +40,12 @@ export class YyDial extends LitElement {
       fill: none;
       stroke: var(--yy-ring-outer);
       stroke-linecap: round;
-      will-change: stroke-dashoffset;
     }
 
     .inner-ring {
       fill: none;
       stroke: var(--yy-ring-inner);
       stroke-linecap: round;
-      will-change: stroke-dashoffset;
       transition: stroke 200ms ease;
     }
 
@@ -53,45 +54,45 @@ export class YyDial extends LitElement {
     }
   `;
 
-  /** 0–1 progress for the outer ring (full shuttle / 40m) */
   @property({ type: Number }) outerProgress = 0;
-
-  /** 0–1 progress for the inner ring (20m segment) */
   @property({ type: Number }) innerProgress = 0;
-
-  /** When true, inner ring turns blue (recovery phase) */
   @property({ type: Boolean, reflect: true }) recovery = false;
 
+  #outerRing: SVGCircleElement | null = null;
+  #innerRing: SVGCircleElement | null = null;
+
+  protected firstUpdated() {
+    this.#outerRing = this.renderRoot.querySelector('.outer-ring');
+    this.#innerRing = this.renderRoot.querySelector('.inner-ring');
+    this.#applyProgress();
+  }
+
+  protected updated(changed: Map<string, unknown>) {
+    if (changed.has('outerProgress') || changed.has('innerProgress')) {
+      this.#applyProgress();
+    }
+  }
+
+  #applyProgress() {
+    if (this.#outerRing) {
+      const offset = (1 - this.outerProgress) * OUTER_C;
+      this.#outerRing.style.strokeDashoffset = `${offset}`;
+    }
+    if (this.#innerRing) {
+      const offset = (1 - this.innerProgress) * INNER_C;
+      this.#innerRing.style.strokeDashoffset = `${offset}`;
+    }
+  }
+
   render() {
-    const outerRadius = 120;
-    const innerRadius = 96;
-    const outerCircumference = 2 * Math.PI * outerRadius;
-    const innerCircumference = 2 * Math.PI * innerRadius;
-
-    const outerRemaining = (1 - this.outerProgress) * outerCircumference;
-    const innerRemaining = (1 - this.innerProgress) * innerCircumference;
-
-    const cx = 140;
-    const cy = 140;
-
     return html`
       <svg viewBox="0 0 280 280" aria-hidden="true">
-        <!-- Outer track -->
-        <circle class="track" cx="${cx}" cy="${cy}" r="${outerRadius}"
-          stroke-width="16" />
-        <!-- Outer progress -->
-        <circle class="outer-ring" cx="${cx}" cy="${cy}" r="${outerRadius}"
-          stroke-width="16"
-          stroke-dasharray="${outerCircumference}"
-          stroke-dashoffset="${outerRemaining}" />
-        <!-- Inner track -->
-        <circle class="track" cx="${cx}" cy="${cy}" r="${innerRadius}"
-          stroke-width="12" />
-        <!-- Inner progress -->
-        <circle class="inner-ring" cx="${cx}" cy="${cy}" r="${innerRadius}"
-          stroke-width="12"
-          stroke-dasharray="${innerCircumference}"
-          stroke-dashoffset="${innerRemaining}" />
+        <circle class="track" cx="140" cy="140" r="${OUTER_R}" stroke-width="16" />
+        <circle class="outer-ring" cx="140" cy="140" r="${OUTER_R}"
+          stroke-width="16" stroke-dasharray="${OUTER_C}" stroke-dashoffset="${OUTER_C}" />
+        <circle class="track" cx="140" cy="140" r="${INNER_R}" stroke-width="12" />
+        <circle class="inner-ring" cx="140" cy="140" r="${INNER_R}"
+          stroke-width="12" stroke-dasharray="${INNER_C}" stroke-dashoffset="${INNER_C}" />
       </svg>
     `;
   }

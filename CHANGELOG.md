@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.2 — 2026-07-09
+
+### Fixed
+
+- Dial jitter on iOS eliminated — SVG progress rings now update via direct DOM manipulation instead of Lit template re-renders
+- Bottom nav bar is now position-fixed, content scrolls underneath it
+- Dashboard icon updated to stopwatch
+- Removed redundant "About" heading in Help view
+
+---
+
 ## 1.0.1 — 2026-07-09
 
 ### Fixed
