@@ -1,6 +1,12 @@
 # Yo-Yo Test
 
-Intermittent Recovery Test app for athletic performance evaluations.
+A PWA timer for the **Yo-Yo Intermittent Recovery Test Level 1** (YYIR1) — a maximal aerobic endurance test used worldwide for evaluating athletes in soccer, cricket, Australian football, and other intermittent sports.
+
+Athletes run 20m shuttles (out and back = 40m) at progressively increasing speeds, with a 10-second active recovery between each shuttle. The test continues until the athlete can no longer maintain the required pace (two consecutive missed lines).
+
+This app provides precision-timed audio beeps, visual progress dials, miss tracking, and automatic VO₂max estimation — all offline-capable as a home-screen PWA.
+
+Source: [TheYoYoTest.com](https://www.theyoyotest.com/) | Bangsbo, Iaia & Krustrup (2008), *Sports Medicine* 38(1):37–51.
 
 ## Dev
 

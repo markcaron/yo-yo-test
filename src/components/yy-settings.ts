@@ -4,16 +4,21 @@ import { buttonStyles } from '../styles/buttons.js';
 
 const SETTINGS_KEY = 'yy-settings';
 
+export type ColorMode = 'system' | 'light' | 'dark';
+
 export interface AppSettings {
   countdownEnabled: boolean;
+  colorMode: ColorMode;
 }
+
+const DEFAULTS: AppSettings = { countdownEnabled: true, colorMode: 'system' };
 
 function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    return raw ? JSON.parse(raw) : { countdownEnabled: true };
+    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : DEFAULTS;
   } catch {
-    return { countdownEnabled: true };
+    return DEFAULTS;
   }
 }
 
@@ -23,6 +28,17 @@ function saveSettings(settings: AppSettings): void {
 
 export function getSettings(): AppSettings {
   return loadSettings();
+}
+
+export function applyColorMode(mode: ColorMode): void {
+  const root = document.documentElement;
+  if (mode === 'system') {
+    root.removeAttribute('data-theme');
+    root.style.removeProperty('color-scheme');
+  } else {
+    root.setAttribute('data-theme', mode);
+    root.style.setProperty('color-scheme', mode);
+  }
 }
 
 @customElement('yy-settings')
@@ -148,6 +164,17 @@ export class YySettings extends LitElement {
           </label>
         </div>
 
+        <div class="setting-row">
+          <span class="setting-label">Dark mode</span>
+          <label class="toggle">
+            <input type="checkbox"
+              .checked=${this._settings.colorMode === 'dark'}
+              @change=${this.#toggleDarkMode}
+              aria-label="Enable dark mode" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
         <div class="close-row">
           <button @click=${this.#onClose}>Close</button>
         </div>
@@ -159,6 +186,19 @@ export class YySettings extends LitElement {
     const checked = (e.target as HTMLInputElement).checked;
     this._settings = { ...this._settings, countdownEnabled: checked };
     saveSettings(this._settings);
+    this.#emitChange();
+  }
+
+  #toggleDarkMode(e: Event) {
+    const checked = (e.target as HTMLInputElement).checked;
+    const colorMode: ColorMode = checked ? 'dark' : 'light';
+    this._settings = { ...this._settings, colorMode };
+    saveSettings(this._settings);
+    applyColorMode(colorMode);
+    this.#emitChange();
+  }
+
+  #emitChange() {
     this.dispatchEvent(new CustomEvent('settings-changed', {
       detail: this._settings,
       bubbles: true,
