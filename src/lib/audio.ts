@@ -104,12 +104,13 @@ export function scheduleBeep(type: 'single' | 'double' | 'triple', atTime: numbe
 }
 
 /**
- * Schedule 10 soft countdown ticks, one per second.
- * Lower frequency and volume than test beeps.
+ * Schedule 10 clock-tick sounds, one per second.
+ * Uses a short, sharp high-frequency click to mimic a clock tick,
+ * distinct from the test's musical beeps.
  */
 export function scheduleCountdownTicks(startTime: number): void {
   for (let i = 0; i < 10; i++) {
-    playTone(660, startTime + i, 0.08, 0.2);
+    playTone(1800, startTime + i, 0.02, 0.3);
   }
 }
 

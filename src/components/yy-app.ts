@@ -261,7 +261,7 @@ export class YyApp extends LitElement {
         background: var(--yy-bg-surface);
         color: var(--yy-text);
         padding: var(--yy-space-xl);
-        max-width: min(400px, 90vw);
+        max-width: calc(100% - 32px);
         box-shadow: var(--yy-shadow-lg);
       }
 
