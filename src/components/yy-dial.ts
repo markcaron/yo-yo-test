@@ -89,10 +89,10 @@ export class YyDial extends LitElement {
       <svg viewBox="0 0 280 280" aria-hidden="true">
         <circle class="track" cx="140" cy="140" r="${OUTER_R}" stroke-width="16" />
         <circle class="outer-ring" cx="140" cy="140" r="${OUTER_R}"
-          stroke-width="16" stroke-dasharray="${OUTER_C}" />
+          stroke-width="16" stroke-dasharray="${OUTER_C}" stroke-dashoffset="${OUTER_C}" />
         <circle class="track" cx="140" cy="140" r="${INNER_R}" stroke-width="12" />
         <circle class="inner-ring" cx="140" cy="140" r="${INNER_R}"
-          stroke-width="12" stroke-dasharray="${INNER_C}" />
+          stroke-width="12" stroke-dasharray="${INNER_C}" stroke-dashoffset="${INNER_C}" />
       </svg>
     `;
   }
