@@ -21,7 +21,7 @@ export class YyApp extends LitElement {
         display: flex;
         flex-direction: column;
         min-height: 100dvh;
-        overflow: hidden;
+        padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
       }
 
       /* ─── Header ─── */
@@ -291,6 +291,11 @@ export class YyApp extends LitElement {
 
       /* ─── Bottom bar ─── */
       nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
         display: flex;
         align-items: center;
         justify-content: space-around;
