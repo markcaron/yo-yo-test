@@ -36,14 +36,13 @@ export class YyDial extends LitElement {
       fill: none;
       stroke: var(--yy-ring-outer);
       stroke-linecap: round;
-      transition: stroke-dashoffset 100ms linear;
     }
 
     .inner-ring {
       fill: none;
       stroke: var(--yy-ring-inner);
       stroke-linecap: round;
-      transition: stroke-dashoffset 100ms linear, stroke 200ms ease;
+      transition: stroke 200ms ease;
     }
 
     :host([recovery]) .inner-ring {
