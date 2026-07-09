@@ -23,7 +23,8 @@ export class YyDial extends LitElement {
     svg {
       width: 100%;
       height: 100%;
-      transform: rotate(-90deg);
+      transform: rotate(-90deg) translateZ(0);
+      will-change: contents;
     }
 
     .track {
@@ -36,12 +37,14 @@ export class YyDial extends LitElement {
       fill: none;
       stroke: var(--yy-ring-outer);
       stroke-linecap: round;
+      will-change: stroke-dashoffset;
     }
 
     .inner-ring {
       fill: none;
       stroke: var(--yy-ring-inner);
       stroke-linecap: round;
+      will-change: stroke-dashoffset;
       transition: stroke 200ms ease;
     }
 

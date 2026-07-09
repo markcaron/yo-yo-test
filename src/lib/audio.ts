@@ -25,28 +25,26 @@ function getContext(): AudioContext {
  * Must be called from a user gesture (e.g. play button tap)
  * to unlock audio on iOS/Safari AND override the silent switch.
  *
- * Playing an <audio> element from a gesture switches the web audio
- * session to "playback" category, which ignores the mute switch.
+ * Uses navigator.audioSession.type = 'playback' (Safari 16.4+)
+ * to bypass the hardware mute switch on iOS.
  */
 export function unlockAudio(): void {
+  // Set audio session to playback — bypasses iOS silent switch
+  const nav = navigator as Navigator & { audioSession?: { type: string } };
+  if (nav.audioSession) {
+    try {
+      nav.audioSession.type = 'playback';
+    } catch { /* non-fatal */ }
+  }
+
   const audioCtx = getContext();
 
-  // Standard Web Audio unlock
+  // Standard Web Audio unlock (required for autoplay policy)
   const buffer = audioCtx.createBuffer(1, 1, 22050);
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;
   source.connect(audioCtx.destination);
   source.start(0);
-
-  // iOS silent switch bypass: an <audio> element played from user gesture
-  // forces the audio session into playback mode
-  const silentData = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRBqpAAAAAAD/+1DEAAAHAAGf9AAAIgAANIAAAARMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UMQbg8AAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
-  try {
-    const audio = new Audio(silentData);
-    audio.play().catch(() => {});
-  } catch {
-    // Fallback: not all environments support data URI audio
-  }
 }
 
 function playTone(frequency: number, startTime: number, duration: number, volume = 1.0): OscillatorNode {
