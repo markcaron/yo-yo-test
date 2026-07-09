@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 — 2026-07-09
+
+### Fixed
+
+- Countdown ticks now sound like clock clicks (1800Hz, 20ms) instead of beeps — more distinct from test audio
+- Stop dialog no longer touches screen edges on narrow devices (16px padding each side)
+
+---
+
 ## 1.0.0 — 2026-07-09
 
 Initial public release.
