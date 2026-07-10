@@ -1,6 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
+const SPLASH_SHOWN_KEY = 'yy-splash-shown';
+
 @customElement('yy-splash')
 export class YySplash extends LitElement {
   static styles = css`
@@ -20,7 +22,7 @@ export class YySplash extends LitElement {
       inset: 0;
       background: var(--yy-brand);
       transform-origin: bottom center;
-      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .backdrop.peel {
@@ -66,16 +68,32 @@ export class YySplash extends LitElement {
   #yoyoEl: HTMLElement | null = null;
   #animId: number | null = null;
   #startTime = 0;
+  #failsafeTimer: number | null = null;
 
   connectedCallback() {
     super.connectedCallback();
+
+    if (sessionStorage.getItem(SPLASH_SHOWN_KEY)) {
+      this.setAttribute('hidden', '');
+      return;
+    }
+
     this.removeAttribute('hidden');
+    this.#failsafeTimer = window.setTimeout(() => this.#forceHide(), 3000);
   }
 
   protected firstUpdated() {
-    this.#groupEl = this.renderRoot.querySelector('.yoyo-group') as HTMLElement;
-    this.#stringEl = this.renderRoot.querySelector('.string') as HTMLElement;
-    this.#yoyoEl = this.renderRoot.querySelector('.yoyo') as HTMLElement;
+    if (this.hasAttribute('hidden')) return;
+
+    this.#groupEl = this.renderRoot.querySelector('.yoyo-group');
+    this.#stringEl = this.renderRoot.querySelector('.string');
+    this.#yoyoEl = this.renderRoot.querySelector('.yoyo');
+
+    if (!this.#groupEl || !this.#stringEl || !this.#yoyoEl) {
+      this.#forceHide();
+      return;
+    }
+
     this.#startTime = performance.now();
     this.#animate();
   }
@@ -83,15 +101,21 @@ export class YySplash extends LitElement {
   #animate() {
     const tick = () => {
       const elapsed = performance.now() - this.#startTime;
-      const group = this.#groupEl!;
-      const string = this.#stringEl!;
-      const yoyoEl = this.#yoyoEl!;
+      const group = this.#groupEl;
+      const string = this.#stringEl;
+      const yoyoEl = this.#yoyoEl;
+
+      if (!group || !string || !yoyoEl) {
+        this.#forceHide();
+        return;
+      }
+
       const vh = window.innerHeight;
       const yoyoHeight = yoyoEl.offsetHeight || (window.innerWidth * 0.25);
       const targetStringH = vh - yoyoHeight;
 
       if (this._phase === 'throw') {
-        const duration = 800;
+        const duration = 400;
         const progress = Math.min(elapsed / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 2);
         const stringH = eased * targetStringH;
@@ -105,7 +129,7 @@ export class YySplash extends LitElement {
           this.#startTime = performance.now();
         }
       } else if (this._phase === 'spin') {
-        const duration = 600;
+        const duration = 250;
         const progress = Math.min(elapsed / duration, 1);
         const rotation = 720 + progress * 540;
 
@@ -117,7 +141,7 @@ export class YySplash extends LitElement {
           this.#startTime = performance.now();
         }
       } else if (this._phase === 'snap') {
-        const duration = 600;
+        const duration = 350;
         const progress = Math.min(elapsed / duration, 1);
         const eased = progress < 0.5
           ? 2 * progress * progress
@@ -134,10 +158,7 @@ export class YySplash extends LitElement {
 
         if (progress >= 1) {
           this._phase = 'done';
-          setTimeout(() => {
-            this.setAttribute('hidden', '');
-            this.dispatchEvent(new CustomEvent('splash-complete', { bubbles: true, composed: true }));
-          }, 600);
+          this.#finish();
           return;
         }
       }
@@ -148,15 +169,26 @@ export class YySplash extends LitElement {
     this.#animId = requestAnimationFrame(tick);
   }
 
+  #finish() {
+    sessionStorage.setItem(SPLASH_SHOWN_KEY, '1');
+    setTimeout(() => this.setAttribute('hidden', ''), 400);
+  }
+
+  #forceHide() {
+    sessionStorage.setItem(SPLASH_SHOWN_KEY, '1');
+    this.setAttribute('hidden', '');
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this.#animId) cancelAnimationFrame(this.#animId);
+    if (this.#failsafeTimer) clearTimeout(this.#failsafeTimer);
   }
 
   render() {
     return html`
-      <div class="backdrop ${this._peeling ? 'peel' : ''}"></div>
-      <div class="yoyo-group">
+      <div class="backdrop ${this._peeling ? 'peel' : ''}" aria-hidden="true"></div>
+      <div class="yoyo-group" aria-hidden="true">
         <div class="string"></div>
         <div class="yoyo">
           <svg viewBox="0 0 410 411" fill="none" xmlns="http://www.w3.org/2000/svg">
