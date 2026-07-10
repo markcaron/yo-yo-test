@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.0 — 2026-07-10
+
+### Added
+
+- Splash intro animation — yo-yo throw/spin/snap with brand reveal (once per session)
+- Brand color token (`--yy-brand: #FF2346`)
+- Logo SVG used as brand icon in header lockup with rounded corners
+
+### Changed
+
+- PWA icons updated to red (#FF2346) background with white yo-yo
+- Manifest and meta theme-color updated to brand red
+- Header lockup optically centered
+
+---
+
 ## 1.0.2 — 2026-07-09
 
 ### Fixed
