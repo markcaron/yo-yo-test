@@ -16,6 +16,9 @@
   --yy-border: light-dark(#c9cdd4, #3a3a5a);
   --yy-border-subtle: light-dark(#e2e5ea, #1f1f3a);
 
+  /* ─── Brand ─── */
+  --yy-brand: #FF2346;
+
   /* ─── Accent (athletic blue) ─── */
   --yy-accent: light-dark(#2563eb, #3b82f6);
   --yy-accent-hover: light-dark(#1d4ed8, #60a5fa);
