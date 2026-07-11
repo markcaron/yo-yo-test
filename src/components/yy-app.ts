@@ -94,6 +94,7 @@ export class YyApp extends LitElement {
         position: relative;
         width: 280px;
         height: 280px;
+        contain: strict;
       }
 
       .dial-container {
@@ -381,10 +382,11 @@ export class YyApp extends LitElement {
 
   #engine = new TimerEngine((state) => {
     this.#updateDialDirectly(state);
+    this.#updateStatsDirectly(state);
     this.#updateAnnouncement(state);
     this.#resetMissOnNewShuttle(state);
 
-    const renderKey = `${state.status}-${state.levelIndex}-${state.shuttleIndex}-${state.phase}-${Math.floor(state.elapsedMs / 1000)}`;
+    const renderKey = `${state.status}-${state.levelIndex}-${state.shuttleIndex}-${state.phase}`;
     if (renderKey !== this.#lastRenderKey) {
       this.#lastRenderKey = renderKey;
       this._timerState = state;
@@ -426,17 +428,15 @@ export class YyApp extends LitElement {
 
         <main>
           <div class="stats" role="group" aria-label="Test statistics">
-            <span>${this.#formatTime(elapsedMs)}</span>
-            <span>${distance} m</span>
+            <span id="stat-time">${this.#formatTime(elapsedMs)}</span>
+            <span id="stat-dist">${distance} m</span>
           </div>
           ${this._engineStatus === 'stopped' ? html`
             ${this.#renderResults(levelNum, shuttleNum, distance, elapsedMs)}
           ` : html`
             <div class="dial-wrapper">
               <div class="dial-container" role="img"
-                aria-label="${isCountdown
-                  ? `Countdown: ${Math.ceil(countdownRemaining)} seconds`
-                  : `Test progress: Stage ${levelNum}, Shuttle ${shuttleNum}, Speed ${speed} km/h`}">
+                aria-label="Test progress">
                 <yy-dial
                   .outerProgress=${outerProgress}
                   .innerProgress=${innerProgress}
@@ -643,6 +643,18 @@ export class YyApp extends LitElement {
     dial.outerProgress = state.shuttleProgress;
     dial.innerProgress = state.segmentProgress;
     dial.recovery = state.phase === 'recovery';
+  }
+
+  #updateStatsDirectly(state: TimerState) {
+    const timeEl = this.renderRoot.querySelector('#stat-time');
+    const distEl = this.renderRoot.querySelector('#stat-dist');
+    if (!timeEl || !distEl) return;
+    const ms = this._engineStatus === 'stopped' ? this.#stoppedElapsedMs : state.elapsedMs;
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    timeEl.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+    distEl.textContent = `${state.distance} m`;
   }
 
   #resetMissOnNewShuttle(state: TimerState) {
