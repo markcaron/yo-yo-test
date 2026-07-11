@@ -5,6 +5,7 @@ import { TimerEngine, type TimerState, type EngineStatus } from '../lib/timer-en
 import { YYIR1_LEVELS, estimateVO2max } from '../lib/yo-yo-protocol.js';
 import { iconPlay, iconStop, iconReset, iconMiss, iconDashboard, iconQuestion, iconClipboard, iconSettings } from '../icons.js';
 import { getSettings } from './yy-settings.js';
+import { saveSession } from '../lib/store.js';
 import './yy-dial.js';
 import './yy-help.js';
 import './yy-norms.js';
@@ -162,6 +163,7 @@ export class YyApp extends LitElement {
         font-weight: 700;
         letter-spacing: -0.02em;
         color: var(--yy-text);
+        margin: 0.5rem;
       }
 
       .results .score-label {
@@ -281,7 +283,7 @@ export class YyApp extends LitElement {
       }
 
       dialog h2 {
-        margin: 0 0 var(--yy-space-sm);
+        margin: 0 0 var(--yy-space-md);
         font-size: 1.25rem;
         font-weight: 600;
       }
@@ -290,6 +292,7 @@ export class YyApp extends LitElement {
         margin: 0 0 var(--yy-space-xl);
         color: var(--yy-text-muted);
         font-size: 0.9rem;
+        line-height: 1.5;
       }
 
       .dialog-actions {
@@ -515,7 +518,7 @@ export class YyApp extends LitElement {
         <button class="nav-btn" aria-label="Help" aria-current="${this._view === 'help' ? 'page' : nothing}" @click=${() => this.#setView('help')}>
           <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconQuestion}</svg>
         </button>
-        <button class="nav-btn" aria-label="Stage table" aria-current="${this._view === 'norms' ? 'page' : nothing}" @click=${() => this.#setView('norms')}>
+        <button class="nav-btn" aria-label="Results" aria-current="${this._view === 'norms' ? 'page' : nothing}" @click=${() => this.#setView('norms')}>
           <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconClipboard}</svg>
         </button>
         <button class="nav-btn" aria-label="Settings" aria-current="${this._view === 'settings' ? 'page' : nothing}" @click=${() => this.#setView('settings')}>
@@ -617,7 +620,7 @@ export class YyApp extends LitElement {
 
   #renderResults() {
     const scoreLevel = this.#lastCleanLevel;
-    const scoreShuttle = this.#lastCleanShuttle;
+    const scoreShuttle = this.#lastCleanShuttle + 1;
     const scoreDistance = this.#lastCleanDistance;
     const vo2max = estimateVO2max(scoreDistance);
     return html`
@@ -674,6 +677,7 @@ export class YyApp extends LitElement {
       this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
       this.#engine.stop();
       this._engineStatus = 'stopped';
+      this.#saveResult();
       this.requestUpdate();
     }
   }
@@ -688,11 +692,25 @@ export class YyApp extends LitElement {
     this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
     this.#engine.stop();
     this._engineStatus = 'stopped';
+    this.#saveResult();
     this.requestUpdate();
   }
 
   #cancelStop() {
     this.renderRoot.querySelector<HTMLDialogElement>('#stop-dialog')?.close();
+  }
+
+  #saveResult() {
+    saveSession({
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      testType: 'yo-yo-ir1',
+      currentLevel: this.#lastCleanLevel,
+      currentShuttle: this.#lastCleanShuttle + 1,
+      status: 'complete',
+      totalDistance: this.#lastCleanDistance,
+      vo2max: estimateVO2max(this.#lastCleanDistance),
+    });
   }
 
   #onDialogClose() {}

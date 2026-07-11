@@ -9,7 +9,7 @@
 
   /* ─── Text ─── */
   --yy-text: light-dark(#1a1a2e, #e8e8f0);
-  --yy-text-muted: light-dark(#6b7280, #9ca3af);
+  --yy-text-muted: light-dark(#5f6670, #9ca3af);
   --yy-text-white: #ffffff;
 
   /* ─── Borders ─── */
@@ -24,7 +24,7 @@
   --yy-accent-hover: light-dark(#1d4ed8, #60a5fa);
 
   /* ─── Status ─── */
-  --yy-danger: light-dark(#dc2626, #ef4444);
+  --yy-danger: light-dark(#c82020, #ef4444);
   --yy-danger-hover: light-dark(#b91c1c, #f87171);
   --yy-success: light-dark(#16a34a, #22c55e);
   --yy-success-hover: light-dark(#15803d, #4ade80);
