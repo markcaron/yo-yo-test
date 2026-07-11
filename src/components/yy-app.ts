@@ -379,6 +379,7 @@ export class YyApp extends LitElement {
   #lastShuttleKey = '';
   #stoppedElapsedMs = 0;
   #lastRenderKey = '';
+  #missedThisShuttle = false;
 
   #engine = new TimerEngine((state) => {
     this.#updateDialDirectly(state);
@@ -617,11 +618,14 @@ export class YyApp extends LitElement {
 
   #handlePlay() {
     this._missCount = 0;
+    this.#missedThisShuttle = false;
     this._engineStatus = this._settings.countdownEnabled ? 'countdown' : 'running';
     this.#engine.start({ skipCountdown: !this._settings.countdownEnabled });
   }
 
   #handleMiss() {
+    if (this.#missedThisShuttle) return;
+    this.#missedThisShuttle = true;
     this._missCount++;
     this.#updateMissDots();
     if (this._missCount >= 2) {
@@ -700,10 +704,11 @@ export class YyApp extends LitElement {
     const key = `${state.levelIndex}-${state.shuttleIndex}`;
     if (key !== this.#lastShuttleKey) {
       this.#lastShuttleKey = key;
-      if (this._missCount > 0 && this._missCount < 2) {
+      if (!this.#missedThisShuttle && this._missCount > 0) {
         this._missCount = 0;
         this.#updateMissDots();
       }
+      this.#missedThisShuttle = false;
     }
   }
 
