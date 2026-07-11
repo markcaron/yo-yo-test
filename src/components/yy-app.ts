@@ -376,10 +376,12 @@ export class YyApp extends LitElement {
   @state() private _settings = getSettings();
 
   #lastAnnouncementKey = '';
-  #lastSegmentKey = '';
+  #lastShuttleKey = '';
+  #lastPhaseKey = '';
   #stoppedElapsedMs = 0;
   #lastRenderKey = '';
-  #missedThisSegment = false;
+  #missedThisShuttle = false;
+  #missedThisPhase = false;
 
   #engine = new TimerEngine((state) => {
     this.#updateDialDirectly(state);
@@ -618,14 +620,16 @@ export class YyApp extends LitElement {
 
   #handlePlay() {
     this._missCount = 0;
-    this.#missedThisSegment = false;
+    this.#missedThisShuttle = false;
+    this.#missedThisPhase = false;
     this._engineStatus = this._settings.countdownEnabled ? 'countdown' : 'running';
     this.#engine.start({ skipCountdown: !this._settings.countdownEnabled });
   }
 
   #handleMiss() {
-    if (this.#missedThisSegment) return;
-    this.#missedThisSegment = true;
+    if (this.#missedThisPhase) return;
+    this.#missedThisPhase = true;
+    this.#missedThisShuttle = true;
     this._missCount++;
     this.#updateMissDots();
     if (this._missCount >= 2) {
@@ -701,14 +705,23 @@ export class YyApp extends LitElement {
 
   #resetMissOnNewSegment(state: TimerState) {
     if (state.status !== 'running') return;
-    const key = `${state.levelIndex}-${state.shuttleIndex}-${state.phase}`;
-    if (key !== this.#lastSegmentKey) {
-      this.#lastSegmentKey = key;
-      if (!this.#missedThisSegment && this._missCount > 0) {
+
+    // Reset per-phase flag (allows one miss press per out/back)
+    const phaseKey = `${state.levelIndex}-${state.shuttleIndex}-${state.phase}`;
+    if (phaseKey !== this.#lastPhaseKey) {
+      this.#lastPhaseKey = phaseKey;
+      this.#missedThisPhase = false;
+    }
+
+    // Reset miss count at shuttle boundaries (only if shuttle was clean)
+    const shuttleKey = `${state.levelIndex}-${state.shuttleIndex}`;
+    if (shuttleKey !== this.#lastShuttleKey) {
+      this.#lastShuttleKey = shuttleKey;
+      if (!this.#missedThisShuttle && this._missCount > 0) {
         this._missCount = 0;
         this.#updateMissDots();
       }
-      this.#missedThisSegment = false;
+      this.#missedThisShuttle = false;
     }
   }
 
