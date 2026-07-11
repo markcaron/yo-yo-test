@@ -87,13 +87,18 @@ export class YyApp extends LitElement {
         justify-content: center;
         padding: var(--yy-space-md);
         gap: var(--yy-space-lg);
+        position: relative;
+      }
+
+      .dial-wrapper {
+        position: relative;
+        width: 280px;
+        height: 280px;
       }
 
       .dial-container {
-        position: relative;
-        width: 100%;
-        max-width: 280px;
-        aspect-ratio: 1;
+        position: absolute;
+        inset: 0;
       }
 
       yy-dial {
@@ -420,25 +425,27 @@ export class YyApp extends LitElement {
           ${this._engineStatus === 'stopped' ? html`
             ${this.#renderResults(levelNum, shuttleNum, distance, elapsedMs)}
           ` : html`
-            <div class="dial-container" role="img"
-              aria-label="${isCountdown
-                ? `Countdown: ${Math.ceil(countdownRemaining)} seconds`
-                : `Test progress: Stage ${levelNum}, Shuttle ${shuttleNum}, Speed ${speed} km/h`}">
-              <yy-dial
-                .outerProgress=${outerProgress}
-                .innerProgress=${innerProgress}
-                ?recovery=${isRecovery}
-              ></yy-dial>
-              <div class="dial-center">
-                ${isCountdown ? html`
-                  <span class="countdown-display">${Math.ceil(countdownRemaining)}</span>
-                ` : isRecovery ? html`
-                  <span class="countdown-display">${Math.ceil(recoveryRemaining)}</span>
-                  <span class="recovery-next">${this.#nextStageLabel(levelNum, shuttleNum)}</span>
-                ` : html`
-                  <span class="level-display">${levelNum}:${shuttleNum}</span>
-                  <span class="speed-display">${speed} km/h</span>
-                `}
+            <div class="dial-wrapper">
+              <div class="dial-container" role="img"
+                aria-label="${isCountdown
+                  ? `Countdown: ${Math.ceil(countdownRemaining)} seconds`
+                  : `Test progress: Stage ${levelNum}, Shuttle ${shuttleNum}, Speed ${speed} km/h`}">
+                <yy-dial
+                  .outerProgress=${outerProgress}
+                  .innerProgress=${innerProgress}
+                  ?recovery=${isRecovery}
+                ></yy-dial>
+                <div class="dial-center">
+                  ${isCountdown ? html`
+                    <span class="countdown-display">${Math.ceil(countdownRemaining)}</span>
+                  ` : isRecovery ? html`
+                    <span class="countdown-display">${Math.ceil(recoveryRemaining)}</span>
+                    <span class="recovery-next">${this.#nextStageLabel(levelNum, shuttleNum)}</span>
+                  ` : html`
+                    <span class="level-display">${levelNum}:${shuttleNum}</span>
+                    <span class="speed-display">${speed} km/h</span>
+                  `}
+                </div>
               </div>
             </div>
           `}
