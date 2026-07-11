@@ -188,8 +188,8 @@ export class YyNorms extends LitElement {
     `,
   ];
 
-  @state() _sessions: TestSession[] = [];
-  @state() _deleteTargetId: string | null = null;
+  @state() private _sessions: TestSession[] = [];
+  @state() private _deleteTargetId: string | null = null;
 
   connectedCallback() {
     super.connectedCallback();
@@ -208,7 +208,7 @@ export class YyNorms extends LitElement {
 
   #formatScore(session: TestSession): string {
     const dist = `${session.totalDistance}m`;
-    const level = `L${session.currentLevel}:S${session.currentShuttle}`;
+    const level = `${session.currentLevel}:${session.currentShuttle}`;
     return `${dist} — ${level}`;
   }
 
