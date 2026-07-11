@@ -27,6 +27,13 @@ export class YyHelp extends LitElement {
       margin-top: 0;
     }
 
+    .setup-diagram {
+      width: 100%;
+      max-width: 380px;
+      margin: 0 auto var(--yy-space-lg);
+      display: block;
+    }
+
     ol {
       margin: 0;
       padding-left: var(--yy-space-lg);
@@ -43,6 +50,14 @@ export class YyHelp extends LitElement {
       color: var(--yy-text);
     }
 
+    ol li code {
+      background: var(--yy-bg-surface);
+      border: 1px solid var(--yy-border-subtle);
+      padding: 2px 6px;
+      border-radius: var(--yy-radius-sm);
+      font-size: 0.85em;
+    }
+
     .about {
       margin-top: var(--yy-space-2xl);
       padding-top: var(--yy-space-lg);
@@ -53,8 +68,9 @@ export class YyHelp extends LitElement {
     .brand-icon {
       width: 48px;
       height: 48px;
-      fill: var(--yy-text);
       margin-bottom: var(--yy-space-sm);
+      border-radius: var(--yy-radius-lg);
+      overflow: hidden;
     }
 
     .app-name {
@@ -81,25 +97,50 @@ export class YyHelp extends LitElement {
       <h2>Help</h2>
 
       <h3>Instructions</h3>
+
+      <svg class="setup-diagram" viewBox="0 0 400 90" xmlns="http://www.w3.org/2000/svg" aria-label="Cone setup diagram: Recovery cone 5m from Start cone, Start cone 20m from End cone">
+        <!-- Cones -->
+        <circle cx="40" cy="35" r="10" fill="var(--yy-text-muted)" opacity="0.6"/>
+        <circle cx="120" cy="35" r="10" fill="var(--yy-accent)"/>
+        <circle cx="360" cy="35" r="10" fill="var(--yy-accent)"/>
+
+        <!-- Distance lines -->
+        <line x1="55" y1="35" x2="105" y2="35" stroke="var(--yy-border)" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="135" y1="35" x2="345" y2="35" stroke="var(--yy-border)" stroke-width="1" stroke-dasharray="3,2"/>
+
+        <!-- Distance labels -->
+        <text x="80" y="25" text-anchor="middle" font-size="11" fill="var(--yy-text-muted)">5m</text>
+        <text x="240" y="25" text-anchor="middle" font-size="11" fill="var(--yy-text-muted)">20m</text>
+
+        <!-- Cone labels -->
+        <text x="40" y="65" text-anchor="middle" font-size="10" fill="var(--yy-text-muted)">Recovery</text>
+        <text x="40" y="77" text-anchor="middle" font-size="10" fill="var(--yy-text-muted)">cone</text>
+        <text x="120" y="65" text-anchor="middle" font-size="10" fill="var(--yy-text)">Start</text>
+        <text x="120" y="77" text-anchor="middle" font-size="10" fill="var(--yy-text)">cone</text>
+        <text x="360" y="65" text-anchor="middle" font-size="10" fill="var(--yy-text)">End</text>
+        <text x="360" y="77" text-anchor="middle" font-size="10" fill="var(--yy-text)">cone</text>
+      </svg>
+
       <ol>
-        <li>Set up two markers <strong>20 meters</strong> apart.</li>
-        <li>Press <strong>Play</strong> — a 10-second countdown begins.</li>
-        <li>On the first beep, run <strong>20m out</strong> to the far line.</li>
-        <li>On the next beep, run <strong>20m back</strong> to the start line (completing one 40m shuttle).</li>
-        <li>A double beep signals <strong>10 seconds of active recovery</strong> — jog slowly around the start cone.</li>
-        <li>Repeat. Speed increases with each stage — a <strong>triple beep</strong> signals a new, faster stage.</li>
-        <li>If you fail to reach the line before the beep, tap the <strong>Miss</strong> button.</li>
-        <li>After <strong>two consecutive misses</strong>, the test ends automatically.</li>
-        <li>Your score is the <strong>last stage:shuttle completed</strong>, plus total distance and estimated VO₂max.</li>
+        <li>Set up two cones <strong>20 meters</strong> apart, one will be the start cone.</li>
+        <li>Place a third recovery cone <strong>5m</strong> behind/before the start cone.</li>
+        <li>Stand beside the start cone, and <strong>get ready to go.</strong></li>
+        <li><strong>Press Play</strong> (optionally, a 10-second countdown clock begins).</li>
+        <li>On the first beep, <strong>run 20m out</strong> to the cone.</li>
+        <li>On the next beep, <strong>run 20m back</strong> to the start cone (completing one 40m shuttle).</li>
+        <li>A double beep signals <strong>10 seconds of active recovery</strong> — walk or jog slowly around the recovery cone and back to the start cone.</li>
+        <li><strong>Repeat.</strong> <em>Speed increases</em> with each stage — a <strong>triple beep</strong> signals a new, faster stage.</li>
+        <li>If you fail to reach the line before the beep, tap the <strong>Miss button</strong> ☹️.</li>
+        <li><strong>After two consecutive misses</strong>, the test ends automatically.</li>
+        <li><strong>Your score</strong> is the <code>last stage:shuttle completed</code>, plus total distance and estimated VO₂max.</li>
       </ol>
 
       <div class="about">
-        <svg class="brand-icon" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="m474.98 1137.5c-227.48 0-412.5-185.02-412.5-412.5 0-227.53 185.02-412.5 412.5-412.5s412.5 185.02 412.5 412.5-185.02 412.5-412.5 412.5zm0-750c-186 0-337.5 151.5-337.5 337.5s151.5 337.5 337.5 337.5 337.5-151.5 337.5-337.5-151.5-337.5-337.5-337.5z"/>
-          <path d="m474.98 1012.5c-158.48 0-287.48-129-287.48-287.48s129-287.48 287.48-287.48 287.48 129 287.48 287.48-129 287.48-287.48 287.48zm0-500.02c-117 0-212.48 95.484-212.48 212.48s95.484 212.48 212.48 212.48 212.48-95.484 212.48-212.48-95.484-212.48-212.48-212.48z"/>
-          <path d="m552 881.48c-4.5 0-9.5156-0.98438-13.5-2.4844l-63.516-24.984-63.516 24.984c-12 4.5-25.5 3-35.484-4.5-10.5-7.5-15.984-20.016-15.516-32.484l3.9844-68.016-43.5-52.5c-8.0156-9.9844-10.5-23.016-6.5156-35.484 3.9844-12 14.016-21.516 26.484-24.516l66-17.016 36.516-57.516c14.016-21.516 49.5-21.516 63.516 0l36.516 57.516 66 17.016c12.516 3 22.5 12.516 26.484 24.516s1.5 25.5-6.5156 35.484l-43.5 52.5 3.9844 68.016c0.98438 12.984-5.0156 24.984-15.516 32.484-6.5156 4.5-14.016 6.9844-21.984 6.9844zm-77.016-105.47c4.5 0 9.5156 0.98438 13.5 2.4844l22.5 9-1.5-24c-0.51562-9.5156 2.4844-18.984 8.4844-26.016l15.516-18.516-23.484-6c-9-2.4844-17.016-8.0156-22.5-15.984l-12.984-20.484-12.984 20.484c-5.0156 8.0156-12.984 14.016-22.5 15.984l-23.484 6 15.516 18.516c6 7.5 9 16.5 8.4844 26.016l-1.5 24 22.5-9c4.5-1.5 9-2.4844 13.5-2.4844z"/>
-          <path d="m1050 937.5c-20.484 0-37.5-17.016-37.5-37.5v-699.98c0-34.5-27.984-62.484-62.484-62.484s-62.484 27.984-62.484 62.484v525c0 20.484-17.016 37.5-37.5 37.5s-37.5-17.016-37.5-37.5l-0.046875-525c0-75.984 61.5-137.48 137.48-137.48s137.48 61.5 137.48 137.48v699.98c0 20.484-17.016 37.5-37.5 37.5z"/>
-          <path d="m1050 1137.5c-48 0-87.516-39.516-87.516-87.516v-99.984c0-48 39.516-87.516 87.516-87.516s87.516 39.516 87.516 87.516v99.984c0 48-39.516 87.516-87.516 87.516zm0-200.02c-6.9844 0-12.516 5.4844-12.516 12.516v99.984c0 14.016 24.984 14.016 24.984 0v-99.984c0-6.9844-5.4844-12.516-12.516-12.516z"/>
+        <svg class="brand-icon" viewBox="0 0 511 511" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="511" height="511" fill="#FF2346"/>
+          <path d="M141.789 82.1875C26.6732 93.7166 -80 199.75 -80 335.488C-80 471.227 34.3947 591 175.5 591C316.605 591 431 476.6 431 335.488C431 182.533 297.041 62.1384 141.789 82.1875ZM175.485 543.663C60.5142 543.663 -32.6809 450.464 -32.6809 335.488C-32.6809 220.513 60.5219 127.313 175.485 127.313C290.447 127.313 383.643 220.513 383.643 335.488C383.643 450.464 290.447 543.663 175.485 543.663Z" fill="white"/>
+          <path d="M175.485 178.91C89.0055 178.91 18.9058 249.021 18.9058 335.496C18.9058 421.972 89.0132 492.082 175.485 492.082C261.956 492.082 332.064 421.979 332.064 335.496C332.064 249.013 261.964 178.91 175.485 178.91ZM277.246 346.511L203.715 363.781L186.445 437.315C183.767 448.929 167.095 448.929 164.417 437.315L147.147 363.781L73.6163 346.511C62.011 343.832 62.011 327.16 73.6163 324.481L147.147 307.211L164.417 233.677C167.095 222.071 183.767 222.071 186.445 233.677L203.861 307.211L277.246 324.481C289.004 327.16 289.004 343.832 277.246 346.511Z" fill="white"/>
+          <path d="M149 -263L199 -263L199 129L149 129L149 -263Z" fill="white"/>
         </svg>
         <p class="app-name">Yo-Yo Test</p>
         <p class="version">v${__APP_VERSION__}</p>

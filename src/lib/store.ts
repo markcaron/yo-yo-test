@@ -34,3 +34,7 @@ export function deleteSession(id: string): void {
   const sessions = getSessions().filter(s => s.id !== id);
   write(SESSIONS_KEY, sessions);
 }
+
+export function clearAllSessions(): void {
+  write(SESSIONS_KEY, []);
+}

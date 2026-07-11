@@ -15,7 +15,7 @@ export default defineConfig({
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512.svg'],
       manifest: {
         name: 'Yo-Yo Test',
-        short_name: 'Yo-Yo',
+        short_name: 'Yo-Yo Test',
         description: 'Yo-Yo Intermittent Recovery Test timer for athletic performance evaluations',
         start_url: '/',
         display: 'standalone',
