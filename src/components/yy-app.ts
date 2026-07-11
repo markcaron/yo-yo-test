@@ -383,6 +383,7 @@ export class YyApp extends LitElement {
   #engine = new TimerEngine((state) => {
     this.#updateDialDirectly(state);
     this.#updateStatsDirectly(state);
+    this.#updateCenterDirectly(state);
     this.#updateAnnouncement(state);
     this.#resetMissOnNewShuttle(state);
 
@@ -443,15 +444,8 @@ export class YyApp extends LitElement {
                   ?recovery=${isRecovery}
                 ></yy-dial>
                 <div class="dial-center">
-                  ${isCountdown ? html`
-                    <span class="countdown-display">${Math.ceil(countdownRemaining)}</span>
-                  ` : isRecovery ? html`
-                    <span class="countdown-display">${Math.ceil(recoveryRemaining)}</span>
-                    <span class="recovery-next">${this.#nextStageLabel(levelNum, shuttleNum)}</span>
-                  ` : html`
-                    <span class="level-display">${levelNum}:${shuttleNum}</span>
-                    <span class="speed-display">${speed} km/h</span>
-                  `}
+                  <span class="level-display" id="dial-center-text">${levelNum}:${shuttleNum}</span>
+                  <span class="speed-display" id="dial-center-sub">${speed} km/h</span>
                 </div>
               </div>
             </div>
@@ -655,6 +649,23 @@ export class YyApp extends LitElement {
     const seconds = totalSeconds % 60;
     timeEl.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
     distEl.textContent = `${state.distance} m`;
+  }
+
+  #updateCenterDirectly(state: TimerState) {
+    const mainEl = this.renderRoot.querySelector('#dial-center-text');
+    const subEl = this.renderRoot.querySelector('#dial-center-sub');
+    if (!mainEl || !subEl) return;
+
+    if (state.status === 'countdown') {
+      mainEl.textContent = `${Math.ceil(state.countdownRemaining)}`;
+      subEl.textContent = '';
+    } else if (state.phase === 'recovery') {
+      mainEl.textContent = `${Math.ceil(state.recoveryRemaining)}`;
+      subEl.textContent = this.#nextStageLabel(state.level.level, state.shuttleIndex + 1);
+    } else {
+      mainEl.textContent = `${state.level.level}:${state.shuttleIndex + 1}`;
+      subEl.textContent = `${state.level.speed.toFixed(1)} km/h`;
+    }
   }
 
   #resetMissOnNewShuttle(state: TimerState) {
