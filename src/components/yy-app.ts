@@ -424,7 +424,7 @@ export class YyApp extends LitElement {
     if (distEl) distEl.textContent = '0 m';
     if (centerEl) centerEl.textContent = '1:0';
     if (subEl) subEl.textContent = '10.0 km/h';
-    if (nextEl) nextEl.textContent = `Next: Stage ${YYIR1_LEVELS[1]?.level} — ${YYIR1_LEVELS[1]?.speed.toFixed(1)} km/h`;
+    if (nextEl) nextEl.textContent = '';
   }
 
   render() {
