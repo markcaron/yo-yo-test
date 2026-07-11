@@ -382,6 +382,9 @@ export class YyApp extends LitElement {
   #lastRenderKey = '';
   #missedThisShuttle = false;
   #missedThisPhase = false;
+  #lastCleanLevel = 1;
+  #lastCleanShuttle = 0;
+  #lastCleanDistance = 0;
 
   #engine = new TimerEngine((state) => {
     this.#updateDialDirectly(state);
@@ -420,11 +423,17 @@ export class YyApp extends LitElement {
     const centerEl = this.renderRoot.querySelector('#dial-center-text');
     const subEl = this.renderRoot.querySelector('#dial-center-sub');
     const nextEl = this.renderRoot.querySelector('#next-level-text');
+    const dial = this.renderRoot.querySelector('yy-dial') as import('./yy-dial.js').YyDial | null;
     if (timeEl) timeEl.textContent = '0:00';
     if (distEl) distEl.textContent = '0 m';
     if (centerEl) centerEl.textContent = '1:0';
     if (subEl) subEl.textContent = '10.0 km/h';
     if (nextEl) nextEl.textContent = '';
+    if (dial) {
+      dial.outerProgress = 0;
+      dial.innerProgress = 0;
+      dial.recovery = false;
+    }
   }
 
   render() {
@@ -606,13 +615,16 @@ export class YyApp extends LitElement {
     }
   }
 
-  #renderResults(levelNum: number, shuttleNum: number, distance: number, elapsedMs: number) {
-    const vo2max = estimateVO2max(distance);
+  #renderResults(_levelNum: number, _shuttleNum: number, _distance: number, elapsedMs: number) {
+    const scoreLevel = this.#lastCleanLevel;
+    const scoreShuttle = this.#lastCleanShuttle;
+    const scoreDistance = this.#lastCleanDistance;
+    const vo2max = estimateVO2max(scoreDistance);
     return html`
       <div class="results">
         <p class="score-label">Score</p>
-        <p class="score">${levelNum}:${shuttleNum}</p>
-        <p class="stats-line"><strong>${distance}</strong> m</p>
+        <p class="score">${scoreLevel}:${scoreShuttle}</p>
+        <p class="stats-line"><strong>${scoreDistance}</strong> m</p>
         <p class="stats-line">VO₂max ≈ <strong>${vo2max.toFixed(1)}</strong> ml/kg/min</p>
         <p class="stats-line">${this.#formatTime(elapsedMs)} elapsed</p>
       </div>
@@ -645,6 +657,9 @@ export class YyApp extends LitElement {
     this._missCount = 0;
     this.#missedThisShuttle = false;
     this.#missedThisPhase = false;
+    this.#lastCleanLevel = 1;
+    this.#lastCleanShuttle = 0;
+    this.#lastCleanDistance = 0;
     this._engineStatus = this._settings.countdownEnabled ? 'countdown' : 'running';
     this.#engine.start({ skipCountdown: !this._settings.countdownEnabled });
   }
@@ -739,6 +754,11 @@ export class YyApp extends LitElement {
     // Reset miss count at shuttle boundaries (only if shuttle was clean)
     const shuttleKey = `${state.levelIndex}-${state.shuttleIndex}`;
     if (shuttleKey !== this.#lastShuttleKey) {
+      if (!this.#missedThisShuttle && this.#lastShuttleKey !== '') {
+        this.#lastCleanLevel = state.level.level;
+        this.#lastCleanShuttle = state.shuttleIndex;
+        this.#lastCleanDistance = state.distance;
+      }
       this.#lastShuttleKey = shuttleKey;
       if (!this.#missedThisShuttle && this._missCount > 0) {
         this._missCount = 0;
