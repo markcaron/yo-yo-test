@@ -376,10 +376,10 @@ export class YyApp extends LitElement {
   @state() private _settings = getSettings();
 
   #lastAnnouncementKey = '';
-  #lastShuttleKey = '';
+  #lastSegmentKey = '';
   #stoppedElapsedMs = 0;
   #lastRenderKey = '';
-  #missedThisShuttle = false;
+  #missedThisSegment = false;
 
   #engine = new TimerEngine((state) => {
     this.#updateDialDirectly(state);
@@ -387,7 +387,7 @@ export class YyApp extends LitElement {
     this.#updateCenterDirectly(state);
     this.#updateNextLevel(state);
     this.#updateAnnouncement(state);
-    this.#resetMissOnNewShuttle(state);
+    this.#resetMissOnNewSegment(state);
 
     // Always update status immediately (drives button swaps)
     if (state.status !== this._engineStatus) {
@@ -618,14 +618,14 @@ export class YyApp extends LitElement {
 
   #handlePlay() {
     this._missCount = 0;
-    this.#missedThisShuttle = false;
+    this.#missedThisSegment = false;
     this._engineStatus = this._settings.countdownEnabled ? 'countdown' : 'running';
     this.#engine.start({ skipCountdown: !this._settings.countdownEnabled });
   }
 
   #handleMiss() {
-    if (this.#missedThisShuttle) return;
-    this.#missedThisShuttle = true;
+    if (this.#missedThisSegment) return;
+    this.#missedThisSegment = true;
     this._missCount++;
     this.#updateMissDots();
     if (this._missCount >= 2) {
@@ -699,16 +699,16 @@ export class YyApp extends LitElement {
     }
   }
 
-  #resetMissOnNewShuttle(state: TimerState) {
+  #resetMissOnNewSegment(state: TimerState) {
     if (state.status !== 'running') return;
-    const key = `${state.levelIndex}-${state.shuttleIndex}`;
-    if (key !== this.#lastShuttleKey) {
-      this.#lastShuttleKey = key;
-      if (!this.#missedThisShuttle && this._missCount > 0) {
+    const key = `${state.levelIndex}-${state.shuttleIndex}-${state.phase}`;
+    if (key !== this.#lastSegmentKey) {
+      this.#lastSegmentKey = key;
+      if (!this.#missedThisSegment && this._missCount > 0) {
         this._missCount = 0;
         this.#updateMissDots();
       }
-      this.#missedThisShuttle = false;
+      this.#missedThisSegment = false;
     }
   }
 
