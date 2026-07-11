@@ -408,6 +408,12 @@ export class YyApp extends LitElement {
     this.#showIdleState();
   }
 
+  protected updated(changed: Map<string, unknown>) {
+    if (changed.has('_view') && this._view === 'dashboard' && this._engineStatus === 'idle') {
+      this.#showIdleState();
+    }
+  }
+
   #showIdleState() {
     const timeEl = this.renderRoot.querySelector('#stat-time');
     const distEl = this.renderRoot.querySelector('#stat-dist');
