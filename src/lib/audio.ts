@@ -1,32 +1,61 @@
 /**
  * Web Audio API beep engine for the Yo-Yo test.
- * Generates tones programmatically — no audio files needed.
  *
- * Single beep = start/end of 20m segment
- * Double beep = end of shuttle (40m) / start of recovery
- * Triple beep = end of stage (level complete)
- * Tick beep = soft countdown tick
+ * Handles iOS-specific issues:
+ * - AudioContext suspension after screen lock / background
+ * - Audio session reverting to ambient after interruptions
+ * - Stale context requiring recreation
  */
 
 let ctx: AudioContext | null = null;
 let scheduledNodes: OscillatorNode[] = [];
 
-function getContext(): AudioContext {
-  if (!ctx) {
-    ctx = new AudioContext();
-  }
-  if (ctx.state === 'suspended') {
-    ctx.resume();
-  }
+function createContext(): AudioContext {
+  ctx = new AudioContext();
   return ctx;
 }
 
 /**
- * Must be called from a user gesture (e.g. play button tap)
- * to unlock audio on iOS/Safari AND override the silent switch.
- *
- * Uses navigator.audioSession.type = 'playback' (Safari 16.4+)
- * to bypass the hardware mute switch on iOS.
+ * Get or create the AudioContext, ensuring it's in 'running' state.
+ * If suspended, attempts resume. If closed/broken, recreates.
+ */
+function getContext(): AudioContext {
+  if (!ctx || ctx.state === 'closed') {
+    createContext();
+  }
+  return ctx!;
+}
+
+/**
+ * Ensure the AudioContext is running before scheduling audio.
+ * Call this from user gestures and before any beep scheduling.
+ */
+export async function ensureAudioReady(): Promise<void> {
+  const audioCtx = getContext();
+
+  // Re-assert playback session every time (iOS may reset after interruption)
+  const nav = navigator as Navigator & { audioSession?: { type: string } };
+  if (nav.audioSession) {
+    try {
+      nav.audioSession.type = 'playback';
+    } catch { /* non-fatal */ }
+  }
+
+  if (audioCtx.state === 'suspended') {
+    try {
+      await audioCtx.resume();
+    } catch {
+      // If resume fails, recreate the context
+      ctx?.close().catch(() => {});
+      createContext();
+      await ctx!.resume().catch(() => {});
+    }
+  }
+}
+
+/**
+ * Must be called from a user gesture (e.g. play button tap).
+ * Unlocks audio on iOS/Safari and overrides the silent switch.
  */
 export function unlockAudio(): void {
   // Set audio session to playback — bypasses iOS silent switch
@@ -39,7 +68,12 @@ export function unlockAudio(): void {
 
   const audioCtx = getContext();
 
-  // Standard Web Audio unlock (required for autoplay policy)
+  // Force resume (may be suspended)
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  // Standard Web Audio unlock — play a silent buffer from user gesture
   const buffer = audioCtx.createBuffer(1, 1, 22050);
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;
@@ -49,19 +83,28 @@ export function unlockAudio(): void {
 
 function playTone(frequency: number, startTime: number, duration: number, volume = 1.0): OscillatorNode {
   const audioCtx = getContext();
+
+  // If context is suspended, force resume (best-effort, non-blocking)
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  // Guard against scheduling in the past (can happen after background)
+  const safeStart = Math.max(startTime, audioCtx.currentTime);
+
   const oscillator = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
 
   oscillator.type = 'sine';
   oscillator.frequency.value = frequency;
-  gain.gain.setValueAtTime(volume, startTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+  gain.gain.setValueAtTime(volume, safeStart);
+  gain.gain.exponentialRampToValueAtTime(0.01, safeStart + duration);
 
   oscillator.connect(gain);
   gain.connect(audioCtx.destination);
 
-  oscillator.start(startTime);
-  oscillator.stop(startTime + duration);
+  oscillator.start(safeStart);
+  oscillator.stop(safeStart + duration);
 
   oscillator.addEventListener('ended', () => {
     const idx = scheduledNodes.indexOf(oscillator);
@@ -82,7 +125,6 @@ export function cancelAllAudio(): void {
 
 /**
  * Schedule a beep at an absolute AudioContext time.
- * Use this for precision timing against the device clock.
  */
 export function scheduleBeep(type: 'single' | 'double' | 'triple', atTime: number): void {
   const freq = type === 'triple' ? 1200 : 1000;
@@ -105,8 +147,6 @@ export function scheduleBeep(type: 'single' | 'double' | 'triple', atTime: numbe
 
 /**
  * Schedule 10 clock-tick sounds, one per second.
- * Uses a short, sharp high-frequency click to mimic a clock tick,
- * distinct from the test's musical beeps.
  */
 export function scheduleCountdownTicks(startTime: number): void {
   for (let i = 0; i < 10; i++) {
