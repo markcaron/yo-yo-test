@@ -377,12 +377,19 @@ export class YyApp extends LitElement {
   #lastAnnouncementKey = '';
   #lastShuttleKey = '';
   #stoppedElapsedMs = 0;
+  #lastRenderKey = '';
 
   #engine = new TimerEngine((state) => {
-    this._timerState = state;
-    this._engineStatus = state.status;
+    this.#updateDialDirectly(state);
     this.#updateAnnouncement(state);
     this.#resetMissOnNewShuttle(state);
+
+    const renderKey = `${state.status}-${state.levelIndex}-${state.shuttleIndex}-${state.phase}-${Math.floor(state.elapsedMs / 1000)}`;
+    if (renderKey !== this.#lastRenderKey) {
+      this.#lastRenderKey = renderKey;
+      this._timerState = state;
+      this._engineStatus = state.status;
+    }
   });
 
   render() {
@@ -629,6 +636,14 @@ export class YyApp extends LitElement {
   }
 
   #onDialogClose() {}
+
+  #updateDialDirectly(state: TimerState) {
+    const dial = this.renderRoot.querySelector('yy-dial') as import('./yy-dial.js').YyDial | null;
+    if (!dial) return;
+    dial.outerProgress = state.shuttleProgress;
+    dial.innerProgress = state.segmentProgress;
+    dial.recovery = state.phase === 'recovery';
+  }
 
   #resetMissOnNewShuttle(state: TimerState) {
     if (state.status !== 'running') return;
