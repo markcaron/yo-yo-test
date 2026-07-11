@@ -604,6 +604,7 @@ export class YyApp extends LitElement {
 
   #handlePlay() {
     this._missCount = 0;
+    this._engineStatus = this._settings.countdownEnabled ? 'countdown' : 'running';
     this.#engine.start({ skipCountdown: !this._settings.countdownEnabled });
   }
 
@@ -611,6 +612,7 @@ export class YyApp extends LitElement {
     this._missCount++;
     if (this._missCount >= 2) {
       this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
+      this._engineStatus = 'stopped';
       this.#engine.stop();
     }
   }
@@ -622,6 +624,7 @@ export class YyApp extends LitElement {
 
   #confirmStop() {
     this.renderRoot.querySelector<HTMLDialogElement>('#stop-dialog')?.close();
+    this._engineStatus = 'stopped';
     this.#engine.stop();
   }
 
@@ -681,6 +684,7 @@ export class YyApp extends LitElement {
 
   #handleReset() {
     this._missCount = 0;
+    this._engineStatus = 'idle';
     this.#engine.reset();
   }
 
