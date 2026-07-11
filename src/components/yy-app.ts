@@ -405,14 +405,20 @@ export class YyApp extends LitElement {
   });
 
   protected firstUpdated() {
+    this.#showIdleState();
+  }
+
+  #showIdleState() {
     const timeEl = this.renderRoot.querySelector('#stat-time');
     const distEl = this.renderRoot.querySelector('#stat-dist');
     const centerEl = this.renderRoot.querySelector('#dial-center-text');
     const subEl = this.renderRoot.querySelector('#dial-center-sub');
+    const nextEl = this.renderRoot.querySelector('#next-level-text');
     if (timeEl) timeEl.textContent = '0:00';
     if (distEl) distEl.textContent = '0 m';
     if (centerEl) centerEl.textContent = '1:0';
     if (subEl) subEl.textContent = '10.0 km/h';
+    if (nextEl) nextEl.textContent = `Next: Stage ${YYIR1_LEVELS[1]?.level} — ${YYIR1_LEVELS[1]?.speed.toFixed(1)} km/h`;
   }
 
   render() {
@@ -741,6 +747,7 @@ export class YyApp extends LitElement {
     this.#engine.reset();
     this._engineStatus = 'idle';
     this.requestUpdate();
+    this.updateComplete.then(() => this.#showIdleState());
   }
 
   #setView(view: AppView) {
