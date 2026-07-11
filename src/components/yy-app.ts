@@ -404,6 +404,17 @@ export class YyApp extends LitElement {
     }
   });
 
+  protected firstUpdated() {
+    const timeEl = this.renderRoot.querySelector('#stat-time');
+    const distEl = this.renderRoot.querySelector('#stat-dist');
+    const centerEl = this.renderRoot.querySelector('#dial-center-text');
+    const subEl = this.renderRoot.querySelector('#dial-center-sub');
+    if (timeEl) timeEl.textContent = '0:00';
+    if (distEl) distEl.textContent = '0 m';
+    if (centerEl) centerEl.textContent = '1:0';
+    if (subEl) subEl.textContent = '10.0 km/h';
+  }
+
   render() {
     const state = this._timerState;
     const level = state?.level;
@@ -438,8 +449,8 @@ export class YyApp extends LitElement {
 
         <main>
           <div class="stats" role="group" aria-label="Test statistics">
-            <span id="stat-time">${this.#formatTime(elapsedMs)}</span>
-            <span id="stat-dist">${distance} m</span>
+            <span id="stat-time"></span>
+            <span id="stat-dist"></span>
           </div>
           ${this._engineStatus === 'stopped' ? html`
             ${this.#renderResults(levelNum, shuttleNum, distance, elapsedMs)}
@@ -453,8 +464,8 @@ export class YyApp extends LitElement {
                   ?recovery=${isRecovery}
                 ></yy-dial>
                 <div class="dial-center">
-                  <span class="level-display" id="dial-center-text">${levelNum}:${shuttleNum}</span>
-                  <span class="speed-display" id="dial-center-sub">${speed} km/h</span>
+                  <span class="level-display" id="dial-center-text"></span>
+                  <span class="speed-display" id="dial-center-sub"></span>
                 </div>
               </div>
             </div>
