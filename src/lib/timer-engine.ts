@@ -1,5 +1,5 @@
 import { YYIR1_LEVELS, RECOVERY_SECONDS } from './yo-yo-protocol.js';
-import { scheduleBeep, getAudioTime, unlockAudio, scheduleCountdownTicks, cancelAllAudio } from './audio.js';
+import { scheduleBeep, getAudioTime, unlockAudio, ensureAudioReady, scheduleCountdownTicks, cancelAllAudio } from './audio.js';
 import type { LevelData } from './types.js';
 
 export type TimerPhase = 'out' | 'back' | 'recovery';
@@ -65,9 +65,10 @@ export class TimerEngine {
     return this.#status;
   }
 
-  start(options?: { skipCountdown?: boolean }): void {
+  async start(options?: { skipCountdown?: boolean }): Promise<void> {
     if (this.#status === 'running' || this.#status === 'countdown') return;
     unlockAudio();
+    await ensureAudioReady();
     this.#levelIndex = 0;
     this.#shuttleIndex = 0;
     this.#phase = 'out';
