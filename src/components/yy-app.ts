@@ -87,13 +87,19 @@ export class YyApp extends LitElement {
         justify-content: center;
         padding: var(--yy-space-md);
         gap: var(--yy-space-lg);
+        position: relative;
+      }
+
+      .dial-wrapper {
+        position: relative;
+        width: 280px;
+        height: 280px;
+        contain: strict;
       }
 
       .dial-container {
-        position: relative;
-        width: 100%;
-        max-width: 280px;
-        aspect-ratio: 1;
+        position: absolute;
+        inset: 0;
       }
 
       yy-dial {
@@ -371,14 +377,64 @@ export class YyApp extends LitElement {
 
   #lastAnnouncementKey = '';
   #lastShuttleKey = '';
+  #lastPhaseKey = '';
   #stoppedElapsedMs = 0;
+  #lastRenderKey = '';
+  #missedThisShuttle = false;
+  #missedThisPhase = false;
+  #lastCleanLevel = 1;
+  #lastCleanShuttle = 0;
+  #lastCleanDistance = 0;
 
   #engine = new TimerEngine((state) => {
-    this._timerState = state;
-    this._engineStatus = state.status;
+    this.#updateDialDirectly(state);
+    this.#updateStatsDirectly(state);
+    this.#updateCenterDirectly(state);
+    this.#updateNextLevel(state);
     this.#updateAnnouncement(state);
-    this.#resetMissOnNewShuttle(state);
+    this.#resetMissOnNewSegment(state);
+
+    // Always update status immediately (drives button swaps)
+    if (state.status !== this._engineStatus) {
+      this._engineStatus = state.status;
+    }
+
+    // Throttle timerState updates (only for data reads in results/next-level)
+    const renderKey = `${state.levelIndex}-${state.shuttleIndex}-${state.phase}`;
+    if (renderKey !== this.#lastRenderKey) {
+      this.#lastRenderKey = renderKey;
+      this._timerState = state;
+    }
   });
+
+  protected firstUpdated() {
+    this.#showIdleState();
+  }
+
+  protected updated(changed: Map<string, unknown>) {
+    if (changed.has('_view') && this._view === 'dashboard' && this._engineStatus === 'idle') {
+      this.#showIdleState();
+    }
+  }
+
+  #showIdleState() {
+    const timeEl = this.renderRoot.querySelector('#stat-time');
+    const distEl = this.renderRoot.querySelector('#stat-dist');
+    const centerEl = this.renderRoot.querySelector('#dial-center-text');
+    const subEl = this.renderRoot.querySelector('#dial-center-sub');
+    const nextEl = this.renderRoot.querySelector('#next-level-text');
+    const dial = this.renderRoot.querySelector('yy-dial') as import('./yy-dial.js').YyDial | null;
+    if (timeEl) timeEl.textContent = '0:00';
+    if (distEl) distEl.textContent = '0 m';
+    if (centerEl) centerEl.textContent = '1:0';
+    if (subEl) subEl.textContent = '10.0 km/h';
+    if (nextEl) nextEl.textContent = '';
+    if (dial) {
+      dial.outerProgress = 0;
+      dial.innerProgress = 0;
+      dial.recovery = false;
+    }
+  }
 
   render() {
     const state = this._timerState;
@@ -414,31 +470,24 @@ export class YyApp extends LitElement {
 
         <main>
           <div class="stats" role="group" aria-label="Test statistics">
-            <span>${this.#formatTime(elapsedMs)}</span>
-            <span>${distance} m</span>
+            <span id="stat-time"></span>
+            <span id="stat-dist"></span>
           </div>
           ${this._engineStatus === 'stopped' ? html`
-            ${this.#renderResults(levelNum, shuttleNum, distance, elapsedMs)}
+            ${this.#renderResults()}
           ` : html`
-            <div class="dial-container" role="img"
-              aria-label="${isCountdown
-                ? `Countdown: ${Math.ceil(countdownRemaining)} seconds`
-                : `Test progress: Stage ${levelNum}, Shuttle ${shuttleNum}, Speed ${speed} km/h`}">
-              <yy-dial
-                .outerProgress=${outerProgress}
-                .innerProgress=${innerProgress}
-                ?recovery=${isRecovery}
-              ></yy-dial>
-              <div class="dial-center">
-                ${isCountdown ? html`
-                  <span class="countdown-display">${Math.ceil(countdownRemaining)}</span>
-                ` : isRecovery ? html`
-                  <span class="countdown-display">${Math.ceil(recoveryRemaining)}</span>
-                  <span class="recovery-next">${this.#nextStageLabel(levelNum, shuttleNum)}</span>
-                ` : html`
-                  <span class="level-display">${levelNum}:${shuttleNum}</span>
-                  <span class="speed-display">${speed} km/h</span>
-                `}
+            <div class="dial-wrapper">
+              <div class="dial-container" role="img"
+                aria-label="Test progress">
+                <yy-dial
+                  .outerProgress=${outerProgress}
+                  .innerProgress=${innerProgress}
+                  ?recovery=${isRecovery}
+                ></yy-dial>
+                <div class="dial-center">
+                  <span class="level-display" id="dial-center-text"></span>
+                  <span class="speed-display" id="dial-center-sub"></span>
+                </div>
               </div>
             </div>
           `}
@@ -448,7 +497,7 @@ export class YyApp extends LitElement {
           </div>
 
           ${this._engineStatus !== 'stopped'
-            ? this.#renderNextLevel(levelNum)
+            ? this.#renderNextLevel()
             : nothing}
         </main>
       ` : html`
@@ -535,8 +584,8 @@ export class YyApp extends LitElement {
               <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconMiss}</svg>
             </button>
             <div class="miss-indicator" aria-hidden="true">
-              <span class="miss-dot ${this._missCount >= 1 ? 'filled' : ''}"></span>
-              <span class="miss-dot ${this._missCount >= 2 ? 'filled' : ''}"></span>
+              <span class="miss-dot" id="miss-dot-1"></span>
+              <span class="miss-dot" id="miss-dot-2"></span>
             </div>
           </div>
         `;
@@ -549,25 +598,35 @@ export class YyApp extends LitElement {
     }
   }
 
-  #renderNextLevel(currentLevel: number) {
-    const state = this._timerState;
-    const isRecovery = state?.phase === 'recovery';
-    const nextLevelData = YYIR1_LEVELS.find(l => l.level > currentLevel);
-    const text = (this._engineStatus !== 'countdown' && !isRecovery && nextLevelData)
-      ? `Next: Stage ${nextLevelData.level} — ${nextLevelData.speed.toFixed(1)} km/h`
-      : '';
-    return html`<p class="next-level">${text}</p>`;
+  #renderNextLevel() {
+    return html`<p class="next-level" id="next-level-text"></p>`;
   }
 
-  #renderResults(levelNum: number, shuttleNum: number, distance: number, elapsedMs: number) {
-    const vo2max = estimateVO2max(distance);
+  #updateNextLevel(state: TimerState) {
+    const el = this.renderRoot.querySelector('#next-level-text');
+    if (!el) return;
+    if (this._engineStatus === 'countdown' || state.phase === 'recovery') {
+      el.textContent = '';
+    } else {
+      const nextLevelData = YYIR1_LEVELS.find(l => l.level > state.level.level);
+      el.textContent = nextLevelData
+        ? `Next: Stage ${nextLevelData.level} — ${nextLevelData.speed.toFixed(1)} km/h`
+        : '';
+    }
+  }
+
+  #renderResults() {
+    const scoreLevel = this.#lastCleanLevel;
+    const scoreShuttle = this.#lastCleanShuttle;
+    const scoreDistance = this.#lastCleanDistance;
+    const vo2max = estimateVO2max(scoreDistance);
     return html`
       <div class="results">
         <p class="score-label">Score</p>
-        <p class="score">${levelNum}:${shuttleNum}</p>
-        <p class="stats-line"><strong>${distance}</strong> m</p>
+        <p class="score">${scoreLevel}:${scoreShuttle}</p>
+        <p class="stats-line"><strong>${scoreDistance}</strong> m</p>
         <p class="stats-line">VO₂max ≈ <strong>${vo2max.toFixed(1)}</strong> ml/kg/min</p>
-        <p class="stats-line">${this.#formatTime(elapsedMs)} elapsed</p>
+        <p class="stats-line">${this.#formatTime(this.#stoppedElapsedMs)} elapsed</p>
       </div>
     `;
   }
@@ -596,14 +655,26 @@ export class YyApp extends LitElement {
 
   #handlePlay() {
     this._missCount = 0;
+    this.#missedThisShuttle = false;
+    this.#missedThisPhase = false;
+    this.#lastCleanLevel = 1;
+    this.#lastCleanShuttle = 0;
+    this.#lastCleanDistance = 0;
+    this._engineStatus = this._settings.countdownEnabled ? 'countdown' : 'running';
     this.#engine.start({ skipCountdown: !this._settings.countdownEnabled });
   }
 
   #handleMiss() {
+    if (this.#missedThisPhase) return;
+    this.#missedThisPhase = true;
+    this.#missedThisShuttle = true;
     this._missCount++;
+    this.#updateMissDots();
     if (this._missCount >= 2) {
       this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
       this.#engine.stop();
+      this._engineStatus = 'stopped';
+      this.requestUpdate();
     }
   }
 
@@ -614,7 +685,10 @@ export class YyApp extends LitElement {
 
   #confirmStop() {
     this.renderRoot.querySelector<HTMLDialogElement>('#stop-dialog')?.close();
+    this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
     this.#engine.stop();
+    this._engineStatus = 'stopped';
+    this.requestUpdate();
   }
 
   #cancelStop() {
@@ -623,20 +697,87 @@ export class YyApp extends LitElement {
 
   #onDialogClose() {}
 
-  #resetMissOnNewShuttle(state: TimerState) {
+  #updateMissDots() {
+    const dot1 = this.renderRoot.querySelector('#miss-dot-1');
+    const dot2 = this.renderRoot.querySelector('#miss-dot-2');
+    if (dot1) dot1.classList.toggle('filled', this._missCount >= 1);
+    if (dot2) dot2.classList.toggle('filled', this._missCount >= 2);
+  }
+
+  #updateDialDirectly(state: TimerState) {
+    const dial = this.renderRoot.querySelector('yy-dial') as import('./yy-dial.js').YyDial | null;
+    if (!dial) return;
+    dial.outerProgress = state.shuttleProgress;
+    dial.innerProgress = state.segmentProgress;
+    dial.recovery = state.phase === 'recovery';
+  }
+
+  #updateStatsDirectly(state: TimerState) {
+    const timeEl = this.renderRoot.querySelector('#stat-time');
+    const distEl = this.renderRoot.querySelector('#stat-dist');
+    if (!timeEl || !distEl) return;
+    const ms = this._engineStatus === 'stopped' ? this.#stoppedElapsedMs : state.elapsedMs;
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    timeEl.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+    distEl.textContent = `${state.distance} m`;
+  }
+
+  #updateCenterDirectly(state: TimerState) {
+    const mainEl = this.renderRoot.querySelector('#dial-center-text');
+    const subEl = this.renderRoot.querySelector('#dial-center-sub');
+    const dialContainer = this.renderRoot.querySelector('.dial-container');
+    if (!mainEl || !subEl) return;
+
+    if (state.status === 'countdown') {
+      mainEl.textContent = `${Math.ceil(state.countdownRemaining)}`;
+      subEl.textContent = '';
+      if (dialContainer) dialContainer.setAttribute('aria-label', `Countdown: ${Math.ceil(state.countdownRemaining)} seconds`);
+    } else if (state.phase === 'recovery') {
+      mainEl.textContent = `${Math.ceil(state.recoveryRemaining)}`;
+      subEl.textContent = this.#nextStageLabel(state.level.level, state.shuttleIndex + 1);
+      if (dialContainer) dialContainer.setAttribute('aria-label', `Recovery: ${Math.ceil(state.recoveryRemaining)} seconds`);
+    } else {
+      mainEl.textContent = `${state.level.level}:${state.shuttleIndex + 1}`;
+      subEl.textContent = `${state.level.speed.toFixed(1)} km/h`;
+      if (dialContainer) dialContainer.setAttribute('aria-label', `Stage ${state.level.level}, Shuttle ${state.shuttleIndex + 1}, Speed ${state.level.speed.toFixed(1)} km/h`);
+    }
+  }
+
+  #resetMissOnNewSegment(state: TimerState) {
     if (state.status !== 'running') return;
-    const key = `${state.levelIndex}-${state.shuttleIndex}`;
-    if (key !== this.#lastShuttleKey) {
-      this.#lastShuttleKey = key;
-      if (this._missCount > 0 && this._missCount < 2) {
-        this._missCount = 0;
+
+    // Reset per-phase flag (allows one miss press per out/back)
+    const phaseKey = `${state.levelIndex}-${state.shuttleIndex}-${state.phase}`;
+    if (phaseKey !== this.#lastPhaseKey) {
+      this.#lastPhaseKey = phaseKey;
+      this.#missedThisPhase = false;
+    }
+
+    // Reset miss count at shuttle boundaries (only if shuttle was clean)
+    const shuttleKey = `${state.levelIndex}-${state.shuttleIndex}`;
+    if (shuttleKey !== this.#lastShuttleKey) {
+      if (!this.#missedThisShuttle && this.#lastShuttleKey !== '') {
+        this.#lastCleanLevel = state.level.level;
+        this.#lastCleanShuttle = state.shuttleIndex;
+        this.#lastCleanDistance = state.distance;
       }
+      this.#lastShuttleKey = shuttleKey;
+      if (!this.#missedThisShuttle && this._missCount > 0) {
+        this._missCount = 0;
+        this.#updateMissDots();
+      }
+      this.#missedThisShuttle = false;
     }
   }
 
   #handleReset() {
     this._missCount = 0;
     this.#engine.reset();
+    this._engineStatus = 'idle';
+    this.requestUpdate();
+    this.updateComplete.then(() => this.#showIdleState());
   }
 
   #setView(view: AppView) {

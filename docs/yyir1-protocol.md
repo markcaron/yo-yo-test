@@ -3,8 +3,9 @@
 Reference table for building a custom timer/audio app for the YYIR1 test.
 
 ## Protocol
+- Set up two cones 20m apart (start cone + far cone), plus a recovery cone 5m behind the start
 - 20m shuttle (out and back = 40m per circuit)
-- 10-second active recovery between each circuit
+- 10-second active recovery between each circuit (walk/jog around recovery cone)
 - Speed increases progressively per the table below
 - Test ends after two consecutive missed lines (failure to reach the line in time)
 - Score = level/shuttle reached, or total cumulative distance
