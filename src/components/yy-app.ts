@@ -621,8 +621,9 @@ export class YyApp extends LitElement {
     this.#updateMissDots();
     if (this._missCount >= 2) {
       this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
-      this._engineStatus = 'stopped';
       this.#engine.stop();
+      this._engineStatus = 'stopped';
+      this._timerState = { ...this._timerState! };
     }
   }
 
@@ -633,8 +634,9 @@ export class YyApp extends LitElement {
 
   #confirmStop() {
     this.renderRoot.querySelector<HTMLDialogElement>('#stop-dialog')?.close();
-    this._engineStatus = 'stopped';
     this.#engine.stop();
+    this._engineStatus = 'stopped';
+    this._timerState = { ...this._timerState! };
   }
 
   #cancelStop() {
@@ -694,6 +696,7 @@ export class YyApp extends LitElement {
       this.#lastShuttleKey = key;
       if (this._missCount > 0 && this._missCount < 2) {
         this._missCount = 0;
+        this.#updateMissDots();
       }
     }
   }
