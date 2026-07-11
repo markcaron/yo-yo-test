@@ -627,6 +627,8 @@ export class YyApp extends LitElement {
     if (this._missCount >= 2) {
       this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
       this.#engine.stop();
+      this._engineStatus = 'stopped';
+      this.requestUpdate();
     }
   }
 
@@ -639,6 +641,8 @@ export class YyApp extends LitElement {
     this.renderRoot.querySelector<HTMLDialogElement>('#stop-dialog')?.close();
     this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
     this.#engine.stop();
+    this._engineStatus = 'stopped';
+    this.requestUpdate();
   }
 
   #cancelStop() {
@@ -705,8 +709,9 @@ export class YyApp extends LitElement {
 
   #handleReset() {
     this._missCount = 0;
-    this._engineStatus = 'idle';
     this.#engine.reset();
+    this._engineStatus = 'idle';
+    this.requestUpdate();
   }
 
   #setView(view: AppView) {
