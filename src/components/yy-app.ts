@@ -474,7 +474,7 @@ export class YyApp extends LitElement {
             <span id="stat-dist"></span>
           </div>
           ${this._engineStatus === 'stopped' ? html`
-            ${this.#renderResults(levelNum, shuttleNum, distance, elapsedMs)}
+            ${this.#renderResults()}
           ` : html`
             <div class="dial-wrapper">
               <div class="dial-container" role="img"
@@ -615,7 +615,7 @@ export class YyApp extends LitElement {
     }
   }
 
-  #renderResults(_levelNum: number, _shuttleNum: number, _distance: number, elapsedMs: number) {
+  #renderResults() {
     const scoreLevel = this.#lastCleanLevel;
     const scoreShuttle = this.#lastCleanShuttle;
     const scoreDistance = this.#lastCleanDistance;
@@ -626,7 +626,7 @@ export class YyApp extends LitElement {
         <p class="score">${scoreLevel}:${scoreShuttle}</p>
         <p class="stats-line"><strong>${scoreDistance}</strong> m</p>
         <p class="stats-line">VO₂max ≈ <strong>${vo2max.toFixed(1)}</strong> ml/kg/min</p>
-        <p class="stats-line">${this.#formatTime(elapsedMs)} elapsed</p>
+        <p class="stats-line">${this.#formatTime(this.#stoppedElapsedMs)} elapsed</p>
       </div>
     `;
   }
@@ -727,17 +727,21 @@ export class YyApp extends LitElement {
   #updateCenterDirectly(state: TimerState) {
     const mainEl = this.renderRoot.querySelector('#dial-center-text');
     const subEl = this.renderRoot.querySelector('#dial-center-sub');
+    const dialContainer = this.renderRoot.querySelector('.dial-container');
     if (!mainEl || !subEl) return;
 
     if (state.status === 'countdown') {
       mainEl.textContent = `${Math.ceil(state.countdownRemaining)}`;
       subEl.textContent = '';
+      if (dialContainer) dialContainer.setAttribute('aria-label', `Countdown: ${Math.ceil(state.countdownRemaining)} seconds`);
     } else if (state.phase === 'recovery') {
       mainEl.textContent = `${Math.ceil(state.recoveryRemaining)}`;
       subEl.textContent = this.#nextStageLabel(state.level.level, state.shuttleIndex + 1);
+      if (dialContainer) dialContainer.setAttribute('aria-label', `Recovery: ${Math.ceil(state.recoveryRemaining)} seconds`);
     } else {
       mainEl.textContent = `${state.level.level}:${state.shuttleIndex + 1}`;
       subEl.textContent = `${state.level.speed.toFixed(1)} km/h`;
+      if (dialContainer) dialContainer.setAttribute('aria-label', `Stage ${state.level.level}, Shuttle ${state.shuttleIndex + 1}, Speed ${state.level.speed.toFixed(1)} km/h`);
     }
   }
 
