@@ -388,11 +388,16 @@ export class YyApp extends LitElement {
     this.#updateAnnouncement(state);
     this.#resetMissOnNewShuttle(state);
 
-    const renderKey = `${state.status}-${state.levelIndex}-${state.shuttleIndex}-${state.phase}`;
+    // Always update status immediately (drives button swaps)
+    if (state.status !== this._engineStatus) {
+      this._engineStatus = state.status;
+    }
+
+    // Throttle timerState updates (only for data reads in results/next-level)
+    const renderKey = `${state.levelIndex}-${state.shuttleIndex}-${state.phase}`;
     if (renderKey !== this.#lastRenderKey) {
       this.#lastRenderKey = renderKey;
       this._timerState = state;
-      this._engineStatus = state.status;
     }
   });
 
@@ -622,8 +627,6 @@ export class YyApp extends LitElement {
     if (this._missCount >= 2) {
       this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
       this.#engine.stop();
-      this._engineStatus = 'stopped';
-      this._timerState = { ...this._timerState! };
     }
   }
 
@@ -634,9 +637,8 @@ export class YyApp extends LitElement {
 
   #confirmStop() {
     this.renderRoot.querySelector<HTMLDialogElement>('#stop-dialog')?.close();
+    this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
     this.#engine.stop();
-    this._engineStatus = 'stopped';
-    this._timerState = { ...this._timerState! };
   }
 
   #cancelStop() {
