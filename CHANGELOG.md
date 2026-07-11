@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.2.0 — 2026-07-11
+
+### Added
+
+- **Results history** — completed test scores are saved to localStorage and displayed in the Results tab (most recent first)
+- Delete individual results or clear all, with confirmation dialogs
+- `clearAllSessions()` store API
+
+### Changed
+
+- "Stage table" nav renamed to "Results" — results list now sits above the YYIR1 Fitness Norms table
+- Score format uses `level:shuttle` without prefixes (e.g. `2:1` not `L2:S1`) consistently across all views
+- Dialog typography improved — `line-height: 1.5` on body text, increased heading margin
+
+### Fixed
+
+- Shuttle score now displays 1-based (was showing `S0` for first completed shuttle)
+- Miss tracking corrected — per segment (20m line) with two-level tracking (shuttle + phase)
+- Scoring logic follows official protocol — last *clean* shuttle recorded
+- Audio reliability on iOS — `ensureAudioReady()` awaited in `start()` to prevent race on wake
+- Dashboard text repopulates when switching back from other views
+- Next-level text hidden on idle/reset and during countdown
+- Lit crash fixed — removed template bindings from direct-DOM elements
+- Button state swaps synced via direct `_engineStatus` assignment
+
+### Accessibility
+
+- Light-mode contrast improved — `--yy-text-muted` darkened to `#5f6670`, `--yy-danger` to `#c82020` (both ≥ 4.5:1 on body background)
+
+---
+
 ## 1.1.0 — 2026-07-10
 
 ### Added
