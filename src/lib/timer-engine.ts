@@ -65,10 +65,10 @@ export class TimerEngine {
     return this.#status;
   }
 
-  start(options?: { skipCountdown?: boolean }): void {
+  async start(options?: { skipCountdown?: boolean }): Promise<void> {
     if (this.#status === 'running' || this.#status === 'countdown') return;
     unlockAudio();
-    ensureAudioReady();
+    await ensureAudioReady();
     this.#levelIndex = 0;
     this.#shuttleIndex = 0;
     this.#phase = 'out';
