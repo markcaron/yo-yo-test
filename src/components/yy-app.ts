@@ -384,6 +384,7 @@ export class YyApp extends LitElement {
     this.#updateDialDirectly(state);
     this.#updateStatsDirectly(state);
     this.#updateCenterDirectly(state);
+    this.#updateNextLevel(state);
     this.#updateAnnouncement(state);
     this.#resetMissOnNewShuttle(state);
 
@@ -456,7 +457,7 @@ export class YyApp extends LitElement {
           </div>
 
           ${this._engineStatus !== 'stopped'
-            ? this.#renderNextLevel(levelNum)
+            ? this.#renderNextLevel()
             : nothing}
         </main>
       ` : html`
@@ -543,8 +544,8 @@ export class YyApp extends LitElement {
               <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">${iconMiss}</svg>
             </button>
             <div class="miss-indicator" aria-hidden="true">
-              <span class="miss-dot ${this._missCount >= 1 ? 'filled' : ''}"></span>
-              <span class="miss-dot ${this._missCount >= 2 ? 'filled' : ''}"></span>
+              <span class="miss-dot" id="miss-dot-1"></span>
+              <span class="miss-dot" id="miss-dot-2"></span>
             </div>
           </div>
         `;
@@ -557,14 +558,21 @@ export class YyApp extends LitElement {
     }
   }
 
-  #renderNextLevel(currentLevel: number) {
-    const state = this._timerState;
-    const isRecovery = state?.phase === 'recovery';
-    const nextLevelData = YYIR1_LEVELS.find(l => l.level > currentLevel);
-    const text = (this._engineStatus !== 'countdown' && !isRecovery && nextLevelData)
-      ? `Next: Stage ${nextLevelData.level} — ${nextLevelData.speed.toFixed(1)} km/h`
-      : '';
-    return html`<p class="next-level">${text}</p>`;
+  #renderNextLevel() {
+    return html`<p class="next-level" id="next-level-text"></p>`;
+  }
+
+  #updateNextLevel(state: TimerState) {
+    const el = this.renderRoot.querySelector('#next-level-text');
+    if (!el) return;
+    if (this._engineStatus === 'countdown' || state.phase === 'recovery') {
+      el.textContent = '';
+    } else {
+      const nextLevelData = YYIR1_LEVELS.find(l => l.level > state.level.level);
+      el.textContent = nextLevelData
+        ? `Next: Stage ${nextLevelData.level} — ${nextLevelData.speed.toFixed(1)} km/h`
+        : '';
+    }
   }
 
   #renderResults(levelNum: number, shuttleNum: number, distance: number, elapsedMs: number) {
@@ -610,6 +618,7 @@ export class YyApp extends LitElement {
 
   #handleMiss() {
     this._missCount++;
+    this.#updateMissDots();
     if (this._missCount >= 2) {
       this.#stoppedElapsedMs = this._timerState?.elapsedMs ?? 0;
       this._engineStatus = 'stopped';
@@ -633,6 +642,13 @@ export class YyApp extends LitElement {
   }
 
   #onDialogClose() {}
+
+  #updateMissDots() {
+    const dot1 = this.renderRoot.querySelector('#miss-dot-1');
+    const dot2 = this.renderRoot.querySelector('#miss-dot-2');
+    if (dot1) dot1.classList.toggle('filled', this._missCount >= 1);
+    if (dot2) dot2.classList.toggle('filled', this._missCount >= 2);
+  }
 
   #updateDialDirectly(state: TimerState) {
     const dial = this.renderRoot.querySelector('yy-dial') as import('./yy-dial.js').YyDial | null;
